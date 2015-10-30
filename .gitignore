@@ -5,7 +5,7 @@ dependency-reduced-pom.xml
 logs
 *.iml
 *.ipr
-env
+.env
 #Eclipse-specific
 .settings/
 .classpath

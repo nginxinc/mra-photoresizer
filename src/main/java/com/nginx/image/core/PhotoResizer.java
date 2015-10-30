@@ -1,6 +1,7 @@
 package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
@@ -410,7 +411,7 @@ public class PhotoResizer
         //this should convert http(s)://blah.aws.com/<some extended url>original.jpg"
         //to <some extended url>
 
-        TransferManager tm = new TransferManager(new ProfileCredentialsProvider());
+        TransferManager tm = new TransferManager(new EnvironmentVariableCredentialsProvider());
 
         try
         {
