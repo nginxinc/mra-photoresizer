@@ -1,0 +1,8 @@
+com/nginx/image/PhotoResizerApplication.class
+com/nginx/image/core/PhotoResizer.class
+com/nginx/image/core/ExifManager.class
+com/nginx/image/health/DiskHealthCheck.class
+com/nginx/image/health/MemoryHealthCheck.class
+com/nginx/image/core/PhotoResizer$ImageInformation.class
+com/nginx/image/PhotoResizerConfiguration.class
+com/nginx/image/resources/PhotoResizerResource.class
