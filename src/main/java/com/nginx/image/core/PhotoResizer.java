@@ -44,6 +44,8 @@ import java.net.URL;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 
 import static java.lang.Math.round;
 
@@ -85,8 +87,8 @@ public class PhotoResizer
         this.imageURL = imageURL;
         originalBuffImage = null;
         String resizedImagesMapAsJSON = "";
-        HashMap<String,File> imageFilesMap = new HashMap<>();
-        HashMap<String,String> imagesURLMap = new HashMap<>();
+        ConcurrentHashMap<String,File> imageFilesMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String,String> imagesURLMap = new ConcurrentHashMap<>();
 
         if(processedImages.containsKey(imageURL))
         {
@@ -113,17 +115,16 @@ public class PhotoResizer
             imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
             imageFilesMap.put(SMALL, File.createTempFile(SMALL + "_", ".jpg", repository));
 
-            Iterator<String> sizes = imageFilesMap.keySet().iterator();
-            while(sizes.hasNext())
+            //execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
+            imageFilesMap.forEach(1, (size, imageFile) ->
             {
-                String size = sizes.next();
-                resize(imageFilesMap.get(size),sizesMap.get(size));
+                resize(imageFile,sizesMap.get(size));
 
                 String keyName = keyBase + size + ".jpg";
                 s3FileUpload(imageFilesMap.get(size),keyName);
                 String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
                 imagesURLMap.put(size,uploadedURL);
-            }
+            });
         }
         catch (MalformedInputException e)
         {
