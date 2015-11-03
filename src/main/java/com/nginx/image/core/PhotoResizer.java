@@ -5,6 +5,7 @@ import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.event.ProgressEvent;
 import com.amazonaws.event.ProgressListener;
+import com.amazonaws.services.elasticache.AmazonElastiCacheClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -16,8 +17,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import com.lambdaworks.redis.RedisClient;
+import com.lambdaworks.redis.RedisConnection;
+import com.lambdaworks.redis.RedisConnectionException;
 import com.nginx.image.PhotoResizerConfiguration;
 import io.dropwizard.jetty.MutableServletContextHandler;
+import io.dropwizard.setup.Environment;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.apache.sanselan.Sanselan;
@@ -57,8 +62,6 @@ public class PhotoResizer
     private BufferedImage imageToResize;
     private BufferedImage mediumImage;
     private BufferedImage smallImage;
-    private static TreeMap<String,String> processedImages = new TreeMap<>();//String is a URL of original file, Value String is JSONMap of processed images
-    // this should connect to AWS Elastic Cache but could go to Redis
     private final MutableServletContextHandler servletContext = new MutableServletContextHandler();
     private String imageURL;
     private BufferedImage originalBuffImage;
@@ -75,6 +78,7 @@ public class PhotoResizer
     private static final ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
+    private static RedisConnection<String, String> myRedis = createAWSElasticCacheClient();
 
     private static Logger logger = Logger.getLogger("com.nginx.image");//dropwizard routes all Logger statements out to Logback
 
@@ -90,10 +94,10 @@ public class PhotoResizer
         ConcurrentHashMap<String,File> imageFilesMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String,String> imagesURLMap = new ConcurrentHashMap<>();
 
-        if(processedImages.containsKey(imageURL))
+        if(myRedis != null && myRedis.get(imageURL) != null)
         {
-            resizedImagesMapAsJSON = processedImages.get(imageURL);
-            return resizedImagesMapAsJSON;
+                resizedImagesMapAsJSON = myRedis.get(imageURL);
+                return resizedImagesMapAsJSON;
         }
         try
         {
@@ -104,6 +108,7 @@ public class PhotoResizer
             File repository = (File) Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
             this.originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
+            //TODO: create file handle pools
             FileUtils.copyURLToFile(jpgURL, this.originalImage);//this retains the EXIF information
             originalBuffImage = ImageIO.read(this.originalImage);
             this.width = originalBuffImage.getWidth(null);
@@ -151,7 +156,7 @@ public class PhotoResizer
             }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
-        processedImages.put(imageURL,resizedImagesMapAsJSON);
+        myRedis.set(imageURL,resizedImagesMapAsJSON);
         return resizedImagesMapAsJSON;
     }
 
@@ -174,7 +179,6 @@ public class PhotoResizer
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        processedImages.put(this.imageURL,imagesMapAsJSON);
         return imagesMapAsJSON;
     }
 
@@ -216,6 +220,7 @@ public class PhotoResizer
             Image tmp = this.originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
             //Bicubic resize doesn't work well in Java -- scale_smooth gives photoshop-like resizing
             resizedBuffImage.getGraphics().drawImage(tmp, 0, 0, null);
+
 /*
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
             TiffImageMetadata data=null;
@@ -452,6 +457,23 @@ public class PhotoResizer
             tm.shutdownNow();
         }
         return true;
+    }
+
+    private static RedisConnection createAWSElasticCacheClient()
+    {
+        AmazonElastiCacheClient awsECC = new AmazonElastiCacheClient(new EnvironmentVariableCredentialsProvider());
+        RedisClient redisCache = new RedisClient(PhotoResizerConfiguration.getRedisCacheUrl(),PhotoResizerConfiguration.getRedisCachePort());
+        RedisConnection<String, String> myRedis;
+        try
+        {
+            myRedis = redisCache.connect();
+        }
+        catch (RedisConnectionException redisConnectionException)
+        {
+            logger.error(redisConnectionException.getMessage());
+            myRedis = null;
+        }
+        return myRedis;
     }
 
 }

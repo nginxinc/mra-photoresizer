@@ -1,11 +1,12 @@
 .idea
-target
+#target/
 atlassian-ide-plugin.xml
 dependency-reduced-pom.xml
 logs
 *.iml
 *.ipr
 .env
+.gitignore
 #Eclipse-specific
 .settings/
 .classpath

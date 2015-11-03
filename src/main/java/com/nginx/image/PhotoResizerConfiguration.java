@@ -2,14 +2,21 @@ package com.nginx.image;
 
 import com.google.common.collect.ImmutableMap;
 import io.dropwizard.Configuration;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.configuration.EnvironmentVariableLookup;
 import org.hibernate.validator.constraints.*;
-import javax.validation.constraints.*;
 
 public class PhotoResizerConfiguration extends Configuration {
-    // TODO: implement service configuration
+
+    static EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
+
     @NotEmpty
-    private static String s3BucketName = "ngra-images"; //this should be overridden by environment variables
+    private static String s3BucketName =  echoEnv.lookup("S3_BUCKET"); //this should be overridden by environment variables
+
+    @NotEmpty
+    private static String redisCacheUrl = echoEnv.lookup("REDIS_CACHE_URL"); //this should be overridden by environment variables
+
+    @NotEmpty
+    private static String redisCachePort = echoEnv.lookup("REDIS_CACHE_PORT"); //this should be overridden by environment variables
 
     @NotEmpty
     private final static String LARGE = "large";
@@ -42,6 +49,13 @@ public class PhotoResizerConfiguration extends Configuration {
     public static String getS3BucketName()
     {
         return s3BucketName;
+    }
+
+    public static String getRedisCacheUrl() { return redisCacheUrl; }//TODO:round robin the url
+
+    public static Integer getRedisCachePort()
+    {
+        return new Integer(redisCachePort);
     }
 
     public static String getLARGE()
