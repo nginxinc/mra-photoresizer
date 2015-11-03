@@ -91,8 +91,10 @@ public class PhotoResizer
         this.imageURL = imageURL;
         originalBuffImage = null;
         String resizedImagesMapAsJSON = "";
-        ConcurrentHashMap<String,File> imageFilesMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<String,String> imagesURLMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String,File> imageFilesMap;
+        imageFilesMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String,String> imagesURLMap;
+        imagesURLMap = new ConcurrentHashMap<>();
 
         if(myRedis != null && myRedis.get(imageURL) != null)
         {

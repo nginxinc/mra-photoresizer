@@ -3,3 +3,6 @@ all:
 
 run:
 	docker run -d -P --env-file=".env" ngra/photoresizer
+	
+debug:
+	docker run -P --env-file=".env" ngra/photoresizer
