@@ -2,14 +2,8 @@ package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.event.ProgressEvent;
-import com.amazonaws.event.ProgressListener;
 import com.amazonaws.services.elasticache.AmazonElastiCacheClient;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.TransferProgress;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,9 +16,9 @@ import com.lambdaworks.redis.RedisConnection;
 import com.lambdaworks.redis.RedisConnectionException;
 import com.nginx.image.PhotoResizerConfiguration;
 import io.dropwizard.jetty.MutableServletContextHandler;
-import io.dropwizard.setup.Environment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffImageData;
@@ -79,8 +73,8 @@ public class PhotoResizer
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
     private static RedisConnection<String, String> myRedis = createAWSElasticCacheClient();
-
-    private static Logger logger = Logger.getLogger("com.nginx.image");//dropwizard routes all Logger statements out to Logback
+    private static ConcurrentHashMap<String,String> localCache = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
 
     public void PhotoResizer()
     {
@@ -96,9 +90,9 @@ public class PhotoResizer
         ConcurrentHashMap<String,String> imagesURLMap;
         imagesURLMap = new ConcurrentHashMap<>();
 
-        if(myRedis != null && myRedis.get(imageURL) != null)
+        if(getCacheMap(this.imageURL) != null)
         {
-                resizedImagesMapAsJSON = myRedis.get(imageURL);
+                resizedImagesMapAsJSON = getCacheMap(this.imageURL);
                 return resizedImagesMapAsJSON;
         }
         try
@@ -135,15 +129,15 @@ public class PhotoResizer
         }
         catch (MalformedInputException e)
         {
-            logger.error("URL error: " + e.getMessage());
+            LOGGER.error("URL error: " + e.getMessage());
         }
         catch (FileSystemException e)
         {
-            logger.error("FileSystem error: " + e.getMessage());
+            LOGGER.error("FileSystem error: " + e.getMessage());
         }
         catch (Exception e)
         {
-            logger.error("General error: " + e.getMessage());
+            LOGGER.error("General error: " + e.getMessage());
         }
         finally
         {
@@ -158,7 +152,7 @@ public class PhotoResizer
             }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
-        myRedis.set(imageURL,resizedImagesMapAsJSON);
+        putCacheMap(imageURL,resizedImagesMapAsJSON);
         return resizedImagesMapAsJSON;
     }
 
@@ -209,7 +203,7 @@ public class PhotoResizer
         }
         catch (Exception e)
         {
-            logger.debug("This is the general exception message: " + e.getMessage());
+            LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
     }
 
@@ -244,17 +238,17 @@ public class PhotoResizer
         }
         catch (NullPointerException e)
         {
-            logger.debug("This is the null pointer exception message: " + e.getMessage() + "\n");
+            LOGGER.debug("This is the null pointer exception message: " + e.getMessage() + "\n");
         }
 /*
         catch (FileSystemException e)
         {
-            logger.debug("This is the FileSystem exception message: " + e.getMessage() + "\n");
+            LOGGER.debug("This is the FileSystem exception message: " + e.getMessage() + "\n");
         }
 */
         catch (Exception e)
         {
-            logger.debug("This is the general exception message: " + e.getMessage());
+            LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
         return new ImageInformation(1, width, height);
     }
@@ -297,7 +291,7 @@ public class PhotoResizer
         }
         catch (IOException e)
         {
-            logger.debug("caught IOException while writing " + fileHandle.getPath());
+            LOGGER.debug("caught IOException while writing " + fileHandle.getPath());
             e.printStackTrace();
         }
     }
@@ -325,15 +319,15 @@ public class PhotoResizer
         }
         catch (NullPointerException e)
         {
-            logger.debug("This is the File exception message: " + e.getMessage() + "\n");
+            LOGGER.debug("This is the File exception message: " + e.getMessage() + "\n");
         }
         catch (URISyntaxException e)
         {
-            logger.debug("This is the URI exception message: " + e.getMessage() + "\n");
+            LOGGER.debug("This is the URI exception message: " + e.getMessage() + "\n");
         }
         catch (Exception e)
         {
-            logger.debug("This is the general exception message: " + e.getMessage());
+            LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
         return originalImage;
     }
@@ -443,13 +437,13 @@ public class PhotoResizer
         }
         catch (AmazonClientException amazonClientException)
         {
-            logger.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
+            LOGGER.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
             amazonClientException.printStackTrace();
             return false;
         }
         catch (InterruptedException e)
         {
-            logger.error("Unable to upload file, upload was aborted:" + e.getMessage());
+            LOGGER.error("Unable to upload file, upload was aborted:" + e.getMessage());
             e.printStackTrace();
             return false;
         }
@@ -465,17 +459,53 @@ public class PhotoResizer
     {
         AmazonElastiCacheClient awsECC = new AmazonElastiCacheClient(new EnvironmentVariableCredentialsProvider());
         RedisClient redisCache = new RedisClient(PhotoResizerConfiguration.getRedisCacheUrl(),PhotoResizerConfiguration.getRedisCachePort());
-        RedisConnection<String, String> myRedis;
+        RedisConnection<String, String> myRedis = null;
         try
         {
             myRedis = redisCache.connect();
         }
-        catch (RedisConnectionException redisConnectionException)
+        catch (RedisConnectionException e)
         {
-            logger.error(redisConnectionException.getMessage());
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
             myRedis = null;
         }
-        return myRedis;
+        catch (Exception e)
+        {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            myRedis = null;
+        }
+        finally
+        {
+            return myRedis;
+        }
+    }
+
+    private String getCacheMap(String mapURL)
+    {
+        String resizedImagesMapAsJSON = null;
+        if(myRedis != null && myRedis.get(mapURL) != null)
+        {
+            resizedImagesMapAsJSON = myRedis.get(mapURL);
+        }
+        else if(!localCache.isEmpty() && localCache.get(mapURL) != null)
+        {
+            resizedImagesMapAsJSON = localCache.get(mapURL);
+        }
+        return resizedImagesMapAsJSON;
+    }
+
+    private void putCacheMap(String mapURL, String resizedImagesMapAsJSON)
+    {
+        if(myRedis != null && myRedis.get(mapURL) != null)
+        {
+            myRedis.set(mapURL, resizedImagesMapAsJSON);
+        }
+        else
+        {
+            localCache.put(mapURL,resizedImagesMapAsJSON);
+        }
     }
 
 }

@@ -2,6 +2,8 @@ package com.nginx.image.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.nginx.image.core.PhotoResizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -14,7 +16,7 @@ import java.io.InputStream;
 @Path("/resize_image")
 public class PhotoResizerResource
 {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizerResource.class);
     public final PhotoResizer imageProcessor = new PhotoResizer();;
 
     public PhotoResizerResource()
