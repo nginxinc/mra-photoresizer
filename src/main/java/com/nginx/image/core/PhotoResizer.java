@@ -44,12 +44,14 @@ import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 import static java.lang.Math.round;
 
 /**
  * Created by cstetson on 10/24/15.
+ * Copyright (C) 2015 Nginx, Inc.
  */
 public class PhotoResizer
 {
@@ -72,7 +74,7 @@ public class PhotoResizer
     private static final ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
-    private static RedisConnection<String, String> myRedis = createAWSElasticCacheClient();
+    //private static RedisConnection<String, String> myRedis = createAWSElasticCacheClient();
     private static ConcurrentHashMap<String,String> localCache = new ConcurrentHashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
 
@@ -90,11 +92,13 @@ public class PhotoResizer
         ConcurrentHashMap<String,String> imagesURLMap;
         imagesURLMap = new ConcurrentHashMap<>();
 
+/*
         if(getCacheMap(this.imageURL) != null)
         {
                 resizedImagesMapAsJSON = getCacheMap(this.imageURL);
                 return resizedImagesMapAsJSON;
         }
+*/
         try
         {
             URL jpgURL = new URL(imageURL);
@@ -152,7 +156,7 @@ public class PhotoResizer
             }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
-        putCacheMap(imageURL,resizedImagesMapAsJSON);
+        //putCacheMap(imageURL,resizedImagesMapAsJSON);
         return resizedImagesMapAsJSON;
     }
 
@@ -455,11 +459,12 @@ public class PhotoResizer
         return true;
     }
 
-    private static RedisConnection createAWSElasticCacheClient()
+    /*private static RedisConnection createAWSElasticCacheClient()
     {
         AmazonElastiCacheClient awsECC = new AmazonElastiCacheClient(new EnvironmentVariableCredentialsProvider());
         RedisClient redisCache = new RedisClient(PhotoResizerConfiguration.getRedisCacheUrl(),PhotoResizerConfiguration.getRedisCachePort());
         RedisConnection<String, String> myRedis = null;
+        myRedis.setTimeout(new Long(30), TimeUnit.SECONDS);
         try
         {
             myRedis = redisCache.connect();
@@ -507,6 +512,6 @@ public class PhotoResizer
             localCache.put(mapURL,resizedImagesMapAsJSON);
         }
     }
-
+*/
 }
 

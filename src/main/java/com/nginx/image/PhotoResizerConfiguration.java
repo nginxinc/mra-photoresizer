@@ -5,6 +5,11 @@ import io.dropwizard.Configuration;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import org.hibernate.validator.constraints.*;
 
+/**
+ * Created by cstetson on 10/9/15.
+ * Copyright (C) 2015 Nginx, Inc.
+ */
+
 public class PhotoResizerConfiguration extends Configuration {
 
     static EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();

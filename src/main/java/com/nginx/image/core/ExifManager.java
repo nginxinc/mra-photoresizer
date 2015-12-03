@@ -21,6 +21,7 @@ import java.util.List;
 
 /**
  * Created by cstetson on 9/23/15.
+ * Copyright (C) 2015 Nginx, Inc.
  */
 public class ExifManager
 {

@@ -12,10 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import javax.ws.rs.client.Client;
 
-/*
-*
- * Created by chrisstetson on 10/27/15.
-*/
+/**
+ * Created by cstetson on 10/9/15.
+ * Copyright (C) 2015 Nginx, Inc.
+ */
+
 public class PhotoResizerTest
 {
 

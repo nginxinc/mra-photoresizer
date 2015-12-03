@@ -11,6 +11,7 @@ import java.io.InputStream;
 
 /**
  * Created by cstetson on 10/9/15.
+ * Copyright (C) 2015 Nginx, Inc.
  */
 
 @Path("/resize_image")

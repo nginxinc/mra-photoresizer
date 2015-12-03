@@ -9,6 +9,11 @@ import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
+/**
+ * Created by cstetson on 10/9/15.
+ * Copyright (C) 2015 Nginx, Inc.
+ */
+
 public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
 
     public static void main(final String[] args) throws Exception {
