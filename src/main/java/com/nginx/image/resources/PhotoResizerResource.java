@@ -18,7 +18,6 @@ import java.io.InputStream;
 public class PhotoResizerResource
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizerResource.class);
-    public final PhotoResizer imageProcessor = new PhotoResizer();;
 
     public PhotoResizerResource()
     {
@@ -41,6 +40,7 @@ public class PhotoResizerResource
     public String resizeImage(@FormParam("image") String url)
     {
         //String imageDataJSON = imageProcessor.resizeImage(image, fileDetail,filePath,domain);
+        PhotoResizer imageProcessor = new PhotoResizer();;
         String imageDataJSON = imageProcessor.resizeImage(url);
         return imageDataJSON;
     }

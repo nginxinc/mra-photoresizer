@@ -78,12 +78,12 @@ public class PhotoResizer
     //private static ConcurrentHashMap<String,String> localCache = new ConcurrentHashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
     int s3ReAttempts = 0;
-    String classInstance = " + class instance = " + System.identityHashCode(this);
+    String classInstance;
 
 
     public void PhotoResizer()
     {
-
+        classInstance = " + class instance = " + System.identityHashCode(this);
     }
 
     public synchronized String resizeImage(String imageURL)
