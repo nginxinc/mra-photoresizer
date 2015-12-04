@@ -5,6 +5,9 @@ dependency-reduced-pom.xml
 logs
 *.iml
 *.ipr
+.env_dev
+.env
+hs_err_pid*
 
 #Eclipse-specific
 .settings/

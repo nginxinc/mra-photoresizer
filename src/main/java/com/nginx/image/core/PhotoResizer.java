@@ -71,19 +71,24 @@ public class PhotoResizer
     private final static Integer LARGE_SIZE = PhotoResizerConfiguration.getLargeSize();//-1 means stay the same
     private final static Integer MEDIUM_SIZE = PhotoResizerConfiguration.getMediumSize();
     private final static Integer SMALL_SIZE = PhotoResizerConfiguration.getSmallSize();
-    private static final ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
+    private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
     //private static RedisConnection<String, String> myRedis = createAWSElasticCacheClient();
-    private static ConcurrentHashMap<String,String> localCache = new ConcurrentHashMap<>();
+    //private static ConcurrentHashMap<String,String> localCache = new ConcurrentHashMap<>();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
+    int s3ReAttempts = 0;
+    String classInstance = " + class instance = " + System.identityHashCode(this);
+
 
     public void PhotoResizer()
     {
+
     }
 
-    public String resizeImage(String imageURL)
+    public synchronized String resizeImage(String imageURL)
     {
+        System.out.println("Start App: URL " + imageURL + classInstance);
         this.imageURL = imageURL;
         originalBuffImage = null;
         String resizedImagesMapAsJSON = "";
@@ -104,6 +109,7 @@ public class PhotoResizer
             URL jpgURL = new URL(imageURL);
             this.keyBase = jpgURL.getPath();
             this.keyBase = this.keyBase.replaceAll("original.*$","");
+            System.out.println("Start Try: Keybase and URL: " + this.keyBase + " : " +imageURL + classInstance);
             //we need to use files because the Sanselan EXIF libraries expect it
             File repository = (File) Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
@@ -113,6 +119,8 @@ public class PhotoResizer
             originalBuffImage = ImageIO.read(this.originalImage);
             this.width = originalBuffImage.getWidth(null);
             this.height = originalBuffImage.getHeight(null);
+            System.out.println("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
+
 
             this.transformOriginalImage();//this makes sure the originalImage is oriented correctly
 
@@ -126,9 +134,15 @@ public class PhotoResizer
                 resize(imageFile,sizesMap.get(size));
 
                 String keyName = keyBase + size + ".jpg";
+                System.out.println("Mid App: keyname " + keyName + classInstance);
                 s3FileUpload(imageFilesMap.get(size),keyName);
                 String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
                 imagesURLMap.put(size,uploadedURL);
+                imageFilesMap.get(size).delete();
+                imageFilesMap.remove(size);
+                /*
+                ADD This to imagesURLMAP
+                 */
             });
         }
         catch (MalformedInputException e)
@@ -145,22 +159,27 @@ public class PhotoResizer
         }
         finally
         {
-            this.originalImage.delete();
+
+/*
             for(File image:imageFilesMap.values())
             {
                 image.delete();
             }
-            if(originalBuffImage != null)
+*/
+            if(imageFilesMap.isEmpty())
             {
+                //this way we make sure all the resize threads are done
+                this.originalImage.delete();
                 originalBuffImage.flush();
             }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
+        System.out.println("End App: JSON " + resizedImagesMapAsJSON + classInstance);
         //putCacheMap(imageURL,resizedImagesMapAsJSON);
         return resizedImagesMapAsJSON;
     }
 
-    private String makeJson(Map imagesURLMap)
+    private String makeJson(ConcurrentHashMap<String,String> imagesURLMap)
     {
         /**
          * Map will contain
@@ -441,9 +460,16 @@ public class PhotoResizer
         }
         catch (AmazonClientException amazonClientException)
         {
+            boolean madeit = false;
+            if (s3ReAttempts < 3)
+            {
+                s3ReAttempts++;
+                LOGGER.error("Struggling to upload file: Attempt" + s3ReAttempts);
+                madeit = s3FileUpload(fileToUpload, keyName);
+            }
             LOGGER.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
             amazonClientException.printStackTrace();
-            return false;
+            return madeit;
         }
         catch (InterruptedException e)
         {
