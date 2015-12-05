@@ -30,7 +30,7 @@ public class PhotoResizerConfiguration extends Configuration {
     private final static String MEDIUM = "medium";
 
     @NotEmpty
-    private final static String SMALL = "small";
+    private final static String THUMB = "thumb";
 
     @NotEmpty
     private final static Integer LARGE_SIZE = -1;//means stay the same
@@ -39,7 +39,7 @@ public class PhotoResizerConfiguration extends Configuration {
     private final static Integer MEDIUM_SIZE = 640;
 
     @NotEmpty
-    private final static Integer SMALL_SIZE = 128;
+    private final static Integer THUMB_SIZE = 128;
 
     @NotEmpty
     private final static Float COMPRESSION_QUALITY = 0.8F;
@@ -48,7 +48,7 @@ public class PhotoResizerConfiguration extends Configuration {
     private static final ImmutableMap<String, Integer> sizesMap = ImmutableMap.of(
                 LARGE, LARGE_SIZE,
                 MEDIUM, MEDIUM_SIZE,
-                SMALL, SMALL_SIZE
+            THUMB, THUMB_SIZE
         );
 
     public static String getS3BucketName()
@@ -73,9 +73,9 @@ public class PhotoResizerConfiguration extends Configuration {
         return MEDIUM;
     }
 
-    public static String getSMALL()
+    public static String getTHUMB()
     {
-        return SMALL;
+        return THUMB;
     }
 
     public static Integer getLargeSize()
@@ -88,9 +88,9 @@ public class PhotoResizerConfiguration extends Configuration {
         return MEDIUM_SIZE;
     }
 
-    public static Integer getSmallSize()
+    public static Integer getThumbSize()
     {
-        return SMALL_SIZE;
+        return THUMB_SIZE;
     }
 
     public static ImmutableMap<String, Integer> getSizesMap()

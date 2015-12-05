@@ -40,7 +40,7 @@ public class PhotoResizerResource
     public String resizeImage(@FormParam("image") String url)
     {
         //String imageDataJSON = imageProcessor.resizeImage(image, fileDetail,filePath,domain);
-        PhotoResizer imageProcessor = new PhotoResizer();;
+        PhotoResizer imageProcessor = new PhotoResizer();
         String imageDataJSON = imageProcessor.resizeImage(url);
         return imageDataJSON;
     }

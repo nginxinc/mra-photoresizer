@@ -2,7 +2,6 @@ package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.services.elasticache.AmazonElastiCacheClient;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonGenerationException;
@@ -11,9 +10,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.lambdaworks.redis.RedisClient;
-import com.lambdaworks.redis.RedisConnection;
-import com.lambdaworks.redis.RedisConnectionException;
 import com.nginx.image.PhotoResizerConfiguration;
 import io.dropwizard.jetty.MutableServletContextHandler;
 import org.slf4j.Logger;
@@ -26,7 +22,6 @@ import org.apache.sanselan.formats.tiff.TiffImageMetadata;
 import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
 import org.apache.sanselan.formats.tiff.constants.TagInfo;
 import org.apache.sanselan.formats.tiff.constants.TiffConstants;
-import sun.net.ProgressMonitor;
 
 import javax.imageio.*;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
@@ -44,8 +39,6 @@ import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 
 import static java.lang.Math.round;
 
@@ -57,7 +50,7 @@ public class PhotoResizer
 {
     private BufferedImage imageToResize;
     private BufferedImage mediumImage;
-    private BufferedImage smallImage;
+    private BufferedImage thumbImage;
     private final MutableServletContextHandler servletContext = new MutableServletContextHandler();
     private String imageURL;
     private BufferedImage originalBuffImage;
@@ -67,10 +60,10 @@ public class PhotoResizer
     private int height = 0;
     private final static String LARGE = PhotoResizerConfiguration.getLARGE();
     private final static String MEDIUM = PhotoResizerConfiguration.getMEDIUM();
-    private final static String SMALL = PhotoResizerConfiguration.getSMALL();
+    private final static String THUMB = PhotoResizerConfiguration.getTHUMB();
     private final static Integer LARGE_SIZE = PhotoResizerConfiguration.getLargeSize();//-1 means stay the same
     private final static Integer MEDIUM_SIZE = PhotoResizerConfiguration.getMediumSize();
-    private final static Integer SMALL_SIZE = PhotoResizerConfiguration.getSmallSize();
+    private final static Integer THUMB_SIZE = PhotoResizerConfiguration.getThumbSize();
     private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
@@ -83,11 +76,11 @@ public class PhotoResizer
 
     public void PhotoResizer()
     {
-        classInstance = " + class instance = " + System.identityHashCode(this);
     }
 
-    public synchronized String resizeImage(String imageURL)
+    public String resizeImage(String imageURL)
     {
+        this.classInstance = " + class instance = " + System.identityHashCode(this);
         System.out.println("Start App: URL " + imageURL + classInstance);
         this.imageURL = imageURL;
         originalBuffImage = null;
@@ -126,7 +119,7 @@ public class PhotoResizer
 
             imageFilesMap.put(LARGE, this.originalImage);
             imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
-            imageFilesMap.put(SMALL, File.createTempFile(SMALL + "_", ".jpg", repository));
+            imageFilesMap.put(THUMB, File.createTempFile(THUMB + "_", ".jpg", repository));
 
             //execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
             imageFilesMap.forEach(1, (size, imageFile) ->
@@ -138,10 +131,25 @@ public class PhotoResizer
                 s3FileUpload(imageFilesMap.get(size),keyName);
                 String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
                 imagesURLMap.put(size,uploadedURL);
-                imageFilesMap.get(size).delete();
+                //imageFilesMap.get(size).delete();
                 imageFilesMap.remove(size);
                 /*
                 ADD This to imagesURLMAP
+                t.string   "name"
+                t.string   "description"
+                t.datetime "created_at",    null: false
+                t.datetime "updated_at",    null: false
+                t.integer  "album_id"
+                t.string   "url"
+                t.string   "thumb_url"
+                t.integer  "thumb_height"
+                t.integer  "thumb_width"
+                t.string   "medium_url"
+                t.integer  "medium_height"
+                t.integer  "medium_width"
+                t.string   "large_url"
+                t.integer  "large_height"
+                t.integer  "large_width"
                  */
             });
         }
@@ -442,7 +450,7 @@ public class PhotoResizer
         {
             // TransferManager processes all transfers asynchronously,
             // so this call will return immediately.
-            keyName = keyName.replace("/" + existingBucketName + "/","");//this is because the original URL incorporates the bucketname at the begining of the url
+            keyName = keyName.replaceFirst("^/","");//this is because the original key should not have a starting slash
             Upload upload = tm.upload(existingBucketName, keyName, fileToUpload);
             // You can poll your transfer's status to check its progress
             if (upload.isDone() == false) {
@@ -456,7 +464,11 @@ public class PhotoResizer
             // asynchronous notifications about your transfer's progress.
 
             upload.waitForCompletion();
-            System.out.println("Upload complete.");
+            if(upload.isDone())
+            {
+                System.out.println("Transfer: " + upload.getDescription());
+                System.out.println("Upload complete.");
+            }
         }
         catch (AmazonClientException amazonClientException)
         {
