@@ -37,6 +37,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -124,15 +125,16 @@ public class PhotoResizer
             //execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
             imageFilesMap.forEach(1, (size, imageFile) ->
             {
-                resize(imageFile,sizesMap.get(size));
+                ImageInformation imageData = resize(imageFile,sizesMap.get(size));
 
                 String keyName = keyBase + size + ".jpg";
                 System.out.println("Mid App: keyname " + keyName + classInstance);
                 s3FileUpload(imageFilesMap.get(size),keyName);
                 String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
-                imagesURLMap.put(size,uploadedURL);
+                imagesURLMap.put(size + "_url",uploadedURL);
+                imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
+                imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
                 //imageFilesMap.get(size).delete();
-                imageFilesMap.remove(size);
                 /*
                 ADD This to imagesURLMAP
                 t.string   "name"
@@ -167,13 +169,11 @@ public class PhotoResizer
         }
         finally
         {
-
-/*
-            for(File image:imageFilesMap.values())
+            for(String image:imageFilesMap.keySet())
             {
-                image.delete();
+                imageFilesMap.get(image).delete();
+                imageFilesMap.remove(image);
             }
-*/
             if(imageFilesMap.isEmpty())
             {
                 //this way we make sure all the resize threads are done
@@ -181,6 +181,8 @@ public class PhotoResizer
                 originalBuffImage.flush();
             }
         }
+        //imagesURLMap.put("created_at", LocalDateTime.now().toString());
+        //imagesURLMap.put("updated_at", LocalDateTime.now().toString());
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
         System.out.println("End App: JSON " + resizedImagesMapAsJSON + classInstance);
         //putCacheMap(imageURL,resizedImagesMapAsJSON);
@@ -209,16 +211,17 @@ public class PhotoResizer
         return imagesMapAsJSON;
     }
 
-    private void resize(File resizedImageFile, int maxSize)
+    private ImageInformation resize(File resizedImageFile, int maxSize)
     {
-        BufferedImage resizedBuffImage;
+        ImageInformation imageData = new ImageInformation(1,0,0);
         double scale = 0d;
         try
         {
             if(maxSize == -1)
             {
                 scale = 1;
-                return;
+                imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
+                return imageData;
             }
             else if (width > height) //sizes[0] is width, [1] is HEIGHT
             {
@@ -230,12 +233,13 @@ public class PhotoResizer
             }
             int widthScale = (int) round(scale * originalBuffImage.getWidth());
             int heightScale = (int) round(scale * originalBuffImage.getHeight());
-            this.resize(resizedImageFile, widthScale, heightScale);
+            return imageData = this.resize(resizedImageFile, widthScale, heightScale);
         }
         catch (Exception e)
         {
             LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
+        return imageData;
     }
 
     private ImageInformation resize(File resizedImageFile, int width, int height)
