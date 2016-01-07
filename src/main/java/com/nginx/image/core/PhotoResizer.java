@@ -115,7 +115,6 @@ public class PhotoResizer
             this.height = originalBuffImage.getHeight(null);
             System.out.println("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
-
             this.transformOriginalImage();//this makes sure the originalImage is oriented correctly
 
             imageFilesMap.put(LARGE, this.originalImage);
@@ -223,7 +222,7 @@ public class PhotoResizer
                 imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
                 return imageData;
             }
-            else if (width > height) //sizes[0] is width, [1] is HEIGHT
+            else if (originalBuffImage.getWidth() > originalBuffImage.getHeight()) //sizes[0] is width, [1] is HEIGHT
             {
                 scale = (double) maxSize/originalBuffImage.getWidth();
             }
