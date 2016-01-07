@@ -453,7 +453,8 @@ public class PhotoResizer
         {
             // TransferManager processes all transfers asynchronously,
             // so this call will return immediately.
-            keyName = keyName.replaceFirst("^/","");//this is because the original key should not have a starting slash
+            keyName = keyName.replaceFirst("^/" + existingBucketName + "/","");//this is because the original key should not have a starting slash
+            //String uploadKeyName = keyName.replaceFirst("^" + existingBucketName, "");
             Upload upload = tm.upload(existingBucketName, keyName, fileToUpload);
             // You can poll your transfer's status to check its progress
             if (upload.isDone() == false) {
