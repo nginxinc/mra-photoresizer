@@ -7,10 +7,16 @@ logs
 *.ipr
 .env_dev
 .env
-hs_err_pid*
+hs_err*
+.DS_Store
+
 
 #Eclipse-specific
 .settings/
 .classpath
 .project
 nb-configuration.xml
+
+#NGINX files
+nginx-repo.key
+nginx-repo.crt
