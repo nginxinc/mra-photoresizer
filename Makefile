@@ -3,7 +3,7 @@ name = ngra-photoresizer
 volumes = -v $(CURDIR)/nginx-resizer.conf:/etc/nginx/nginx-resizer.conf
 
 build:
-	docker build -t $(tag) .
+	docker build  --build-arg VAULT_TOKEN=$(VAULT_TOKEN) -t $(tag) .
 
 run:
 	docker run --env-file .env_dev --name $(name) -it -p 80:80 -p 8080:8080 $(tag)
