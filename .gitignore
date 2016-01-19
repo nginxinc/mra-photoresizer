@@ -20,7 +20,3 @@ nb-configuration.xml
 #NGINX files
 nginx-repo.key
 nginx-repo.crt
-jmeter.log
-vault
-java_pid72751.hprof
-.nginx-repo.crt
