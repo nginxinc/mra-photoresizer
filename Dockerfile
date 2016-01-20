@@ -38,5 +38,5 @@ COPY PhotoResizer.yaml /app/
 
 #Run app
 WORKDIR /app
-CMD ["java -jar ./PhotoResizer-1.0.1-SNAPSHOT.jar server ./PhotoResizer.yaml"]
+CMD java -jar ./PhotoResizer-1.0.1-SNAPSHOT.jar server ./PhotoResizer.yaml
 EXPOSE 80 8080 
