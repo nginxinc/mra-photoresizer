@@ -1,0 +1,31 @@
+{  
+  "id": "/resizer",
+  "cpus": 0.5,
+  "mem": 512,
+  "instances": 1,
+  "env":  {
+    "AWS_ACCESS_KEY_ID":"AKIAJNXYSIYMSNTNBB5Q",
+    "AWS_SECRET_ACCESS_KEY":"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",
+    "AWS_REGION":"us-west-1",
+    "S3_BUCKET":"ngra-images",
+    "REDIS_CACHE_URL":"ngra-redis-cache.duqjub.0001.usw1.cache.amazonaws.com",
+    "REDIS_CACHE_PORT":"6379"
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "docker.io/ngrefarch/ngra-photoresizer",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+            "containerPort": 8000,
+            "hostPort": 0,
+            "protocol": "tcp"
+        }
+      ]
+	}
+  },
+  "uris":  [
+      "file:///etc/docker_credentials.tar.gz"
+  ]
+}

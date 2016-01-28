@@ -48,4 +48,4 @@ COPY PhotoResizer.yaml /app/
 WORKDIR /app
 #CMD ["./resizer-start.sh"]
 CMD java -jar ./PhotoResizer-1.0.1-SNAPSHOT.jar server ./PhotoResizer.yaml
-EXPOSE 80 8080
+EXPOSE 80 8000
