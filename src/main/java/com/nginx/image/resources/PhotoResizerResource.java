@@ -34,7 +34,7 @@ public class PhotoResizerResource
                 "\t<title>Untitled</title>\n" +
                 "\t<meta name=\"generator\" content=\"BBEdit 10.5\" />\n" +
                 "</head>\n" +
-                "<body><form action=\"/v1/image\" method=\"POST\">\n" +
+                "<body style=\"margin:3em;\"><form action=\"/v1/image\" method=\"POST\">\n" +
                 "Test An S3 Image URL: <input type=\"text\" name=\"url\" size=\"100\" value=\"https://s3-us-west-1.amazonaws.com/ngra-images/tests/photoresizer/12345/original.jpg\">\n" +
                 "<br><button name=\"submit\" type=\"submit\">\n" +
                 "Submit\n" +
