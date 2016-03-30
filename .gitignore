@@ -20,3 +20,5 @@ nb-configuration.xml
 #NGINX files
 nginx-repo.key
 nginx-repo.crt
+*.pem
+*.log
