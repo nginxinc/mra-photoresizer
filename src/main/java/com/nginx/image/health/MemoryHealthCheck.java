@@ -22,11 +22,12 @@ public class MemoryHealthCheck extends HealthCheck
         long allocatedMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
 
-        sb.append("free memory: " + format.format(freeMemory / 1024) + "<br/>");
-        sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "<br/>");
-        sb.append("max memory: " + format.format(maxMemory / 1024) + "<br/>");
-        sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "<br/>");
-        if ((freeMemory/maxMemory) < .1) {
+        sb.append("free memory\": \"" + format.format(freeMemory / 1024) + "\",");
+        sb.append("\"allocated memory\": \"" + format.format(allocatedMemory / 1024) + "\",");
+        sb.append("\"max memory\": \"" + format.format(maxMemory / 1024) + "\n");
+        sb.append("\"percentage of memory used:\": \"" + (1 - ((float) freeMemory/allocatedMemory)) * 100 + "%\",");
+        if ((1 - ((float) freeMemory/allocatedMemory)) > .8)
+        {
             return Result.unhealthy(sb.toString());
         }
         return Result.healthy();

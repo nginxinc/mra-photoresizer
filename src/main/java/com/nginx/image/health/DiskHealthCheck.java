@@ -1,6 +1,7 @@
 package com.nginx.image.health;
 
 import com.codahale.metrics.health.HealthCheck;
+import com.google.common.io.Files;
 import io.dropwizard.jetty.MutableServletContextHandler;
 
 import java.io.File;
@@ -20,7 +21,7 @@ public class DiskHealthCheck extends HealthCheck
 
     @Override
     protected Result check() throws Exception {
-        File fileSystem = (File) this.servletContext.getAttribute("javax.servlet.context.tempdir");;
+        File fileSystem = (File) Files.createTempDir();;
 
         NumberFormat format = NumberFormat.getInstance();
 
@@ -29,11 +30,12 @@ public class DiskHealthCheck extends HealthCheck
         long totalSpace = fileSystem.getTotalSpace();
         long freeSpace = fileSystem.getFreeSpace();
 
-        sb.append("free memory: " + format.format(freeSpace / 1024) + "<br/>");
-        sb.append("allocated memory: " + format.format(totalSpace / 1024) + "<br/>");
-        sb.append("max memory: " + format.format(maxFreeSpace / 1024) + "<br/>");
-        sb.append("total free memory: " + format.format((freeSpace + (maxFreeSpace - totalSpace)) / 1024) + "<br/>");
-        if ((freeSpace/maxFreeSpace) < .1) {
+        sb.append("free disk space\": \"" + format.format(freeSpace / 1024) + "\",");
+        sb.append("\"total disk space\": \"" + format.format(totalSpace / 1024) + "\",");
+        sb.append("\"usable disk space\": \"" + format.format(maxFreeSpace / 1024) + "\",");
+        sb.append("\"usable percentage of file system\": \"" + (((float) maxFreeSpace/totalSpace) * 100) + "%\"");
+        if (((float) maxFreeSpace/totalSpace) < .05)
+        {
             return Result.unhealthy(sb.toString());
         }
         return Result.healthy();
