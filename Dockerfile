@@ -49,7 +49,7 @@ COPY /resizer-start.sh /app/
 
 # Amplify
 COPY ./amplify_install.sh /app/amplify_install.sh
-RUN API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' HOSTNAME='resizer' sh /app/amplify_install.sh
+RUN API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' HOSTNAME='mesos-resizer' sh /app/amplify_install.sh
 
 #Java app
 COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
