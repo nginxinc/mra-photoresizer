@@ -45,10 +45,6 @@ COPY ./nginx-resizer.conf /etc/nginx/nginx-resizer.conf
 RUN chown -R nginx /var/log/nginx/
 COPY /resizer-start.sh /app/
 
-COPY ../../nginx/nginx /usr/sbin/
-COPY ../../nginx/status.html /usr/share/nginx/html/
-
-
 # Amplify
 COPY ./amplify_install.sh /app/amplify_install.sh
 RUN API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' HOSTNAME='resizer' sh /app/amplify_install.sh
