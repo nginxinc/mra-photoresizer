@@ -22,3 +22,6 @@ nginx-repo.key
 nginx-repo.crt
 *.pem
 *.log
+/builddef.lst
+/jetty-dir.css
+/mime.types

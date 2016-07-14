@@ -1,0 +1,27 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1430020859308
+Build-Jdk: 1.8.0_05
+Built-By: ryantenney
+Bundle-Description: A set of class providing Metrics integration for Jer
+ sey, the reference JAX-RS	implementation.
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.html
+Bundle-ManifestVersion: 2
+Bundle-Name: Metrics Integration for Jersey 2.x
+Bundle-SymbolicName: io.dropwizard.metrics.jersey2
+Bundle-Version: 3.1.2
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.codahale.metrics.jersey2;uses:="org.glassfish.jersey
+ .server.monitoring,com.codahale.metrics,com.codahale.metrics.annotation
+ ,org.glassfish.jersey.server.model,jersey.repackaged.com.google.common.
+ collect,org.glassfish.jersey.server,javax.ws.rs.ext,javax.ws.rs.core";v
+ ersion="3.1.2"
+Implementation-Title: Metrics Integration for Jersey 2.x
+Implementation-Vendor-Id: io.dropwizard.metrics
+Implementation-Version: 3.1.2
+Import-Package: com.codahale.metrics;version="[3.1,4)",com.codahale.metr
+ ics.annotation;version="[3.1,4)",javax.ws.rs.core;version="[2.0,3)",jav
+ ax.ws.rs.ext;version="[2.0,3)",jersey.repackaged.com.google.common.coll
+ ect;version="[2.11,3)",org.glassfish.jersey.server;version="[2.11,3)",o
+ rg.glassfish.jersey.server.model;version="[2.11,3)",org.glassfish.jerse
+ y.server.monitoring;version="[2.11,3)"
+Tool: Bnd-1.50.0

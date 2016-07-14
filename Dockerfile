@@ -35,7 +35,7 @@ RUN wget -q -O /etc/ssl/nginx/CA.crt https://cs.nginx.com/static/files/CA.crt &&
 	printf "deb https://plus-pkgs.nginx.com/debian `lsb_release -cs` nginx-plus\n" >/etc/apt/sources.list.d/nginx-plus.list
 
 #Install NGINX Plus
-RUN apt-get update && apt-get install -y apt-transport-https nginx-plus-extras
+RUN apt-get update && apt-get install -y apt-transport-https nginx-plus
 
 # forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
@@ -47,13 +47,14 @@ COPY ./nginx-resizer.conf /etc/nginx/nginx-resizer.conf
 RUN chown -R nginx /var/log/nginx/
 COPY /resizer-start.sh /app/
 
-# Amplify
-COPY ./amplify_install.sh /app/amplify_install.sh
-RUN API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' HOSTNAME='mesos-resizer' sh /app/amplify_install.sh
+# Install Amplify
+RUN curl -sS -L -O  https://github.com/nginxinc/nginx-amplify-agent/raw/master/packages/install.sh && \
+	API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' AMPLIFY_HOSTNAME='mesos-resizer' sh ./install.sh
 
 #Java app
 COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
 COPY PhotoResizer.yaml /app/
+COPY ./status.html /usr/share/nginx/html/status.html
 
 #Run app
 WORKDIR /app
