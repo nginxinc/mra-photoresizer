@@ -14,6 +14,23 @@ public class MemoryHealthCheck extends HealthCheck
     @Override
     protected Result check() throws Exception {
         Runtime runtime = Runtime.getRuntime();
+        long allocatedMemory = runtime.totalMemory();
+        long freeMemory = runtime.freeMemory();
+
+        StringBuilder sb = memoryUsed();
+        if ((1 - ((float) freeMemory/allocatedMemory)) > .8)
+        {
+            System.out.println("*****UNHEALTHY*******: " + sb.toString());
+            runtime.gc();
+            System.out.println("*****GC Called*******: " + sb.toString());;
+            return Result.unhealthy(sb.toString());
+        }
+        return Result.healthy();
+    }
+
+    protected StringBuilder memoryUsed()
+    {
+        Runtime runtime = Runtime.getRuntime();
 
         NumberFormat format = NumberFormat.getInstance();
 
@@ -22,13 +39,10 @@ public class MemoryHealthCheck extends HealthCheck
         long allocatedMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
 
-        sb.append("free memory: " + format.format(freeMemory / 1024) + "<br/>");
-        sb.append("allocated memory: " + format.format(allocatedMemory / 1024) + "<br/>");
-        sb.append("max memory: " + format.format(maxMemory / 1024) + "<br/>");
-        sb.append("total free memory: " + format.format((freeMemory + (maxMemory - allocatedMemory)) / 1024) + "<br/>");
-        if ((freeMemory/maxMemory) < .1) {
-            return Result.unhealthy(sb.toString());
-        }
-        return Result.healthy();
+        sb.append("free memory\": \"" + format.format(freeMemory / 1024) + "\",");
+        sb.append("\"allocated memory\": \"" + format.format(allocatedMemory / 1024) + "\",");
+        sb.append("\"max memory\": \"" + format.format(maxMemory / 1024) + "\n");
+        sb.append("\"percentage of memory used:\": \"" + (1 - ((float) freeMemory/allocatedMemory)) * 100 + "%\",");
+        return sb;
     }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.nginx.image.core.PhotoResizerTest" time="0.002" tests="4" errors="0" skipped="0" failures="0">
+<testsuite name="com.nginx.image.core.PhotoResizerTest" time="0.001" tests="4" errors="0" skipped="0" failures="0">
   <properties>
-    <property name="idea.version" value="15.0.2"/>
+    <property name="idea.version" value="2016.2"/>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/jre/lib"/>
     <property name="java.vm.version" value="25.60-b23"/>
@@ -13,7 +13,7 @@
     <property name="guice.disable.misplaced.annotation.check" value="true"/>
     <property name="java.vm.name" value="Java HotSpot(TM) 64-Bit Server VM"/>
     <property name="file.encoding.pkg" value="sun.io"/>
-    <property name="idea.launcher.port" value="7536"/>
+    <property name="idea.launcher.port" value="7533"/>
     <property name="user.country" value="US"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="sun.os.patch.level" value="unknown"/>
@@ -33,20 +33,20 @@
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="java.class.version" value="52.0"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
-    <property name="os.version" value="10.11.3"/>
+    <property name="os.version" value="10.11.6"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="user.home" value="/Users/chrisstetson"/>
     <property name="user.timezone" value="America/Los_Angeles"/>
     <property name="java.awt.printerjob" value="sun.lwawt.macosx.CPrinterJob"/>
     <property name="java.specification.version" value="1.8"/>
-    <property name="idea.launcher.bin.path" value="/Applications/IntelliJ IDEA 15.app/Contents/bin"/>
+    <property name="idea.launcher.bin.path" value="/Applications/IntelliJ IDEA.app/Contents/bin"/>
     <property name="file.encoding" value="UTF-8"/>
     <property name="user.name" value="chrisstetson"/>
-    <property name="java.class.path" value="/usr/local/apache-maven-3.3.3/boot/plexus-classworlds-2.5.2.jar:/Applications/IntelliJ IDEA 15.app/Contents/lib/idea_rt.jar"/>
+    <property name="java.class.path" value="/usr/local/apache-maven-3.3.3/boot/plexus-classworlds-2.5.2.jar:/Applications/IntelliJ IDEA.app/Contents/lib/idea_rt.jar"/>
     <property name="java.vm.specification.version" value="1.8"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.home" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/jre"/>
-    <property name="sun.java.command" value="com.intellij.rt.execution.application.AppMain org.codehaus.classworlds.Launcher -Didea.version=15.0.2 package"/>
+    <property name="sun.java.command" value="com.intellij.rt.execution.application.AppMain org.codehaus.classworlds.Launcher -Didea.version=2016.2 package"/>
     <property name="java.specification.vendor" value="Oracle Corporation"/>
     <property name="user.language" value="en"/>
     <property name="awt.toolkit" value="sun.lwawt.macosx.LWCToolkit"/>
@@ -66,6 +66,6 @@
   </properties>
   <testcase name="testWriteJPEG" classname="com.nginx.image.core.PhotoResizerTest" time="0.001"/>
   <testcase name="testMakeJSON" classname="com.nginx.image.core.PhotoResizerTest" time="0"/>
-  <testcase name="testTransformImage" classname="com.nginx.image.core.PhotoResizerTest" time="0.001"/>
+  <testcase name="testTransformImage" classname="com.nginx.image.core.PhotoResizerTest" time="0"/>
   <testcase name="testResize" classname="com.nginx.image.core.PhotoResizerTest" time="0"/>
 </testsuite>
