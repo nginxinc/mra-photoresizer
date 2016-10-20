@@ -24,8 +24,4 @@ push:
 
 test:
 	# Tests not yet implemented
-
-check-env:
-ifndef VAULT_TOKEN
-    $(error VAULT_TOKEN is undefined)
-endif
+	

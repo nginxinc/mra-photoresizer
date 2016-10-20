@@ -19,11 +19,11 @@ nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;"
 service amplify-agent start
 
 sleep 30
-APP_PID=`ps aux | grep $APP | grep -v grep`
+APP_PID=`ps aux | grep "$APP" | grep -v grep`
 
 while [ -f "$NGINX_PID" ] &&  [ "$APP_PID" ];
 do 
 	sleep 5;
-	APP_PID=`ps aux | grep $APP | grep -v grep`;
+	APP_PID=`ps aux | grep "$APP" | grep -v grep`;
 	#echo "The python process: $PID"
 done

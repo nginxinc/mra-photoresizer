@@ -48,13 +48,13 @@ RUN apt-get update && apt-get install -y nginx-plus-extras
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 	ln -sf /dev/stderr /var/log/nginx/error.log
 
-COPY ./nginx* /etc/nginx/
+COPY ./nginx /etc/nginx/
 RUN chown -R nginx /var/log/nginx/
 COPY /start.sh /app/
 
 # Install Amplify
-RUN curl -sS -L -O  https://github.com/nginxinc/nginx-amplify-agent/raw/master/packages/install.sh && \
-	API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' AMPLIFY_HOSTNAME='resizer' sh ./install.sh
+#RUN curl -sS -L -O  https://github.com/nginxinc/nginx-amplify-agent/raw/master/packages/install.sh && \
+#	API_KEY='0202c79a3d8411fcf82b35bc3d458f7e' AMPLIFY_HOSTNAME='resizer' sh ./install.sh
 
 #Java app
 COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
