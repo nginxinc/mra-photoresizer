@@ -1,6 +1,6 @@
 tag = ngrefarch/ngra-photoresizer:mesos
 name = ngra-photoresizer
-volumes = -v $(CURDIR)/nginx-resizer.conf:/etc/nginx/nginx-resizer.conf
+volumes = ''
 ports = -p 80:80 -p 443:443 -p 8000:8000
 env = --env-file=.env
 
