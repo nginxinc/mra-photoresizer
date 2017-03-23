@@ -23,5 +23,3 @@ nginx-repo.crt
 *.pem
 *.log
 
-
-nginx-plus_1.11.8-0-trusty_amd64.deb
