@@ -14,7 +14,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "docker.io/ngrefarch/ngra-photoresizer",
+      "image": "docker.io/ngrefarch/ngra-photoresizer:mesos",
       "network": "BRIDGE",
       "portMappings": [
         {
