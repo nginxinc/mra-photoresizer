@@ -5,7 +5,10 @@ import com.codahale.metrics.health.HealthCheck;
 import java.text.NumberFormat;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  MemoryHealthCheck.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class MemoryHealthCheck extends HealthCheck {
@@ -21,13 +24,13 @@ public class MemoryHealthCheck extends HealthCheck {
         if ((1 - ((float)freeMemory/allocatedMemory)) > 0.8) {
             System.out.println("*****UNHEALTHY*******: " + sb.toString());
             runtime.gc();
-            System.out.println("*****GC Called*******: " + sb.toString());;
+            System.out.println("*****GC Called*******: " + sb.toString());
             return Result.unhealthy(sb.toString());
         }
         return Result.healthy();
     }
 
-    protected StringBuilder memoryUsed() {
+    private StringBuilder memoryUsed() {
         Runtime runtime = Runtime.getRuntime();
 
         NumberFormat format = NumberFormat.getInstance();
@@ -37,10 +40,10 @@ public class MemoryHealthCheck extends HealthCheck {
         long allocatedMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
 
-        sb.append("free memory\": \"" + format.format(freeMemory / 1024) + "\",");
-        sb.append("\"allocated memory\": \"" + format.format(allocatedMemory / 1024) + "\",");
-        sb.append("\"max memory\": \"" + format.format(maxMemory / 1024) + "\n");
-        sb.append("\"percentage of memory used:\": \"" + (1 - ((float) freeMemory/allocatedMemory)) * 100 + "%\",");
+        sb.append("free memory\": \"").append(format.format(freeMemory / 1024)).append("\",");
+        sb.append("\"allocated memory\": \"").append(format.format(allocatedMemory / 1024)).append("\",");
+        sb.append("\"max memory\": \"").append(format.format(maxMemory / 1024)).append("\n");
+        sb.append("\"percentage of memory used:\": \"").append((1 - ((float) freeMemory / allocatedMemory)) * 100).append("%\",");
         return sb;
     }
 }

@@ -8,7 +8,6 @@ import org.apache.sanselan.common.IImageMetadata;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.jpeg.exifRewrite.ExifRewriter;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
-import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
 import org.apache.sanselan.formats.tiff.constants.TagInfo;
 import org.apache.sanselan.formats.tiff.constants.TiffConstants;
 import org.apache.sanselan.formats.tiff.write.TiffOutputDirectory;
@@ -20,13 +19,16 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  ExifManager.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
-public class ExifManager {
+class ExifManager {
     private static Logger logger = Logger.getLogger("com.nginx.image");
 
-    static void copyExifData(File sourceFile, File destFile, List<TagInfo> excludedFields,
+    static void copyExifData (File sourceFile, File destFile, List<TagInfo> excludedFields,
                              HashMap<TagInfo, Integer> updatedFields) {
         String tempFileName = destFile.getAbsolutePath() + ".tmp";
         File tempFile = null;
@@ -44,7 +46,9 @@ public class ExifManager {
             // technically possible to copy this data by changing the byte
             // order of the data, but handling this case is outside the scope
             // of this implementation
-            if (sourceSet.byteOrder != destSet.byteOrder) { logger.debug("byteOrder is not the same."); }
+            if (sourceSet.byteOrder != destSet.byteOrder) {
+                logger.debug("byteOrder is not the same.");
+            }
 
             destSet.getOrCreateExifDirectory();
             sourceSet.getOrCreateExifDirectory();
@@ -109,27 +113,11 @@ public class ExifManager {
             }
 
             if (tempFile != null) {
-                if (tempFile.exists()) { tempFile.delete(); }
+                if (tempFile.exists()) {
+                    tempFile.delete();
+                }
             }
         }
-    }
-
-    public static int getOrientation(File imageFile) {
-        int orientation=0;
-        try {
-            JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(imageFile));
-            TiffImageMetadata data=null;
-            if (meta != null) {
-                data=meta.getExif();
-            }
-            if (data != null) {
-                orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
-            }
-
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-        return orientation;
     }
 
     private static TiffOutputSet getSanselanOutputSet(File jpegImageFile, int defaultByteOrder)
@@ -150,16 +138,18 @@ public class ExifManager {
         // If JPEG file contains no EXIF metadata, create an empty set
         // of EXIF metadata. Otherwise, use existing EXIF metadata to
         // keep all other existing tags
-        if (outputSet == null)
-            outputSet = new TiffOutputSet(exif==null?defaultByteOrder:exif.contents.header.byteOrder);
+        if (outputSet == null) {
+            outputSet = new TiffOutputSet(exif == null ? defaultByteOrder : exif.contents.header.byteOrder);
+        }
 
         return outputSet;
     }
 
     private static TiffOutputDirectory getOrCreateExifDirectory(TiffOutputSet outputSet, TiffOutputDirectory outputDirectory) {
         TiffOutputDirectory result = outputSet.findDirectory(outputDirectory.type);
-        if (result != null)
+        if (result != null) {
             return result;
+        }
         result = new TiffOutputDirectory(outputDirectory.type);
         try {
             outputSet.addDirectory(result);

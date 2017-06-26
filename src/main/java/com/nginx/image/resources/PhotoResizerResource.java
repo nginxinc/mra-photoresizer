@@ -7,7 +7,10 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  PhotoresizerResource.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 @Path("/v1/image")

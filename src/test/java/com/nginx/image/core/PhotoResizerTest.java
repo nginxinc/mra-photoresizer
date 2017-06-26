@@ -13,8 +13,10 @@ import java.io.IOException;
 import javax.ws.rs.client.Client;
 
 /**
- * Created by cstetson on 10/9/15.
- * Copyright (C) 2015 Nginx, Inc.
+ //  PhotoResizerTest.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerTest

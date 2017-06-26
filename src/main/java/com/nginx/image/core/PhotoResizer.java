@@ -4,14 +4,11 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
-import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.nginx.image.PhotoResizerConfiguration;
-import io.dropwizard.jetty.MutableServletContextHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.commons.io.FileUtils;
@@ -43,14 +40,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.Math.round;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  PhotoResizer.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
+
 public class PhotoResizer {
-    private BufferedImage imageToResize;
-    private BufferedImage mediumImage;
-    private BufferedImage thumbImage;
-    private final MutableServletContextHandler servletContext = new MutableServletContextHandler();
     private String imageURL;
     private BufferedImage originalBuffImage;
     private File originalImage;
@@ -60,15 +57,12 @@ public class PhotoResizer {
     private final static String LARGE = PhotoResizerConfiguration.getLARGE();
     private final static String MEDIUM = PhotoResizerConfiguration.getMEDIUM();
     private final static String THUMB = PhotoResizerConfiguration.getTHUMB();
-    private final static Integer LARGE_SIZE = PhotoResizerConfiguration.getLargeSize();//-1 means stay the same
-    private final static Integer MEDIUM_SIZE = PhotoResizerConfiguration.getMediumSize();
-    private final static Integer THUMB_SIZE = PhotoResizerConfiguration.getThumbSize();
     private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
     private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
-    int s3ReAttempts = 0;
-    String classInstance;
+    private int s3ReAttempts = 0;
+    private String classInstance;
 
 
     public void PhotoResizer() {}
@@ -164,7 +158,7 @@ public class PhotoResizer {
     }
 
     private String makeJson(ConcurrentHashMap<String,String> imagesURLMap) {
-        /**
+        /*
          * Map will contain
          * large -> <S3 URL>
          * medium -> <S3 URL>
@@ -173,10 +167,6 @@ public class PhotoResizer {
         String imagesMapAsJSON = "";
         try {
             imagesMapAsJSON = new ObjectMapper().writeValueAsString(imagesURLMap);
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
@@ -185,7 +175,7 @@ public class PhotoResizer {
 
     private ImageInformation resize(File resizedImageFile, int maxSize) {
         ImageInformation imageData = new ImageInformation(1,0,0);
-        double scale = 0d;
+        double scale;
         try {
             if(maxSize == -1) {
                 scale = 1;
@@ -209,7 +199,7 @@ public class PhotoResizer {
     }
 
     private ImageInformation resize(File resizedImageFile, int width, int height) {
-        BufferedImage resizedBuffImage = null;
+        BufferedImage resizedBuffImage;
         try {
             resizedBuffImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Image tmp = this.originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
@@ -269,7 +259,7 @@ public class PhotoResizer {
         }
     }
 
-    private File transformOriginalImage() {
+    private void transformOriginalImage() {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
             TiffImageMetadata data=null;
@@ -281,7 +271,7 @@ public class PhotoResizer {
             orientation=0;
             if (data != null) {
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
-                if(orientation == 1) return originalImage;
+                if(orientation == 1) return;
             }
             AffineTransform t = getExifTransformation(new ImageInformation(orientation,width,height));
             originalBuffImage = transformImage(originalBuffImage,t);
@@ -297,10 +287,9 @@ public class PhotoResizer {
         catch (Exception e) {
             LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
-        return originalImage;
     }
 
-    public static BufferedImage transformImage(BufferedImage image, AffineTransform transform) throws Exception {
+    private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) throws Exception {
 
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 
@@ -313,11 +302,11 @@ public class PhotoResizer {
     }
 
     public static class ImageInformation { //inner class
-        public final int orientation;
-        public final int width;
-        public final int height;
+        final int orientation;
+        final int width;
+        final int height;
 
-        public ImageInformation(int orientation, int width, int height) {
+        ImageInformation(int orientation, int width, int height) {
             this.orientation = orientation;
             this.width = width;
             this.height = height;
@@ -385,7 +374,7 @@ public class PhotoResizer {
             keyName = keyName.replaceFirst("^/", "");//this is because the original key should not have a starting slash
             Upload upload = tm.upload(existingBucketName, keyName, fileToUpload);
             // You can poll your transfer's status to check its progress
-            if (upload.isDone() == false) {
+            if (!upload.isDone()) {
                 System.out.println("Transfer: " + upload.getDescription());
                 System.out.println("  - State: " + upload.getState());
                 System.out.println("  - Progress: "

@@ -6,7 +6,10 @@ import io.dropwizard.configuration.EnvironmentVariableLookup;
 import org.hibernate.validator.constraints.*;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  PhotoResizerConfiguration.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerConfiguration extends Configuration {

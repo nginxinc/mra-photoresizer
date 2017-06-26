@@ -10,7 +10,10 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 /**
- * Copyright (C) 2017 NGINX, Inc.
+ //  PhotoresizerApplication.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
