@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
-import org.apache.sanselan.formats.tiff.TiffImageData;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
 import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
 import org.apache.sanselan.formats.tiff.constants.TagInfo;
@@ -48,7 +47,6 @@ import static java.lang.Math.round;
 
 
 public class PhotoResizer {
-    private String imageURL;
     private BufferedImage originalBuffImage;
     private File originalImage;
     private int orientation;
@@ -65,14 +63,13 @@ public class PhotoResizer {
     private String classInstance;
 
 
-    public void PhotoResizer() {}
+    public PhotoResizer() {}
 
     public String resizeImage(String imageURL) {
         this.classInstance = " + class instance = " + System.identityHashCode(this);
         System.out.println("Start App: URL " + imageURL + classInstance);
-        this.imageURL = imageURL;
         originalBuffImage = null;
-        String resizedImagesMapAsJSON = "";
+        String resizedImagesMapAsJSON;
         ConcurrentHashMap<String,File> imageFilesMap;
         imageFilesMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String,String> imagesURLMap;
@@ -83,24 +80,23 @@ public class PhotoResizer {
             this.keyBase = jpgURL.getPath();
             this.keyBase = this.keyBase.replaceAll("original.*$","");
             System.out.println("Start Try: Keybase and URL: " + this.keyBase + " : " +imageURL + classInstance);
-            //we need to use files because the Sanselan EXIF libraries expect it
-            File repository = (File) Files.createTempDir();
+            // We need to use files because the Sanselan EXIF libraries expect it
+            File repository = Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
             this.originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
-            //TODO: create file handle pools
-            FileUtils.copyURLToFile(jpgURL, this.originalImage);//this retains the EXIF information
+            FileUtils.copyURLToFile(jpgURL, this.originalImage); // This retains the EXIF information
             originalBuffImage = ImageIO.read(this.originalImage);
             this.width = originalBuffImage.getWidth(null);
             this.height = originalBuffImage.getHeight(null);
             System.out.println("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
-            this.transformOriginalImage();//this makes sure the originalImage is oriented correctly
+            this.transformOriginalImage(); // This makes sure the originalImage is oriented correctly
 
             imageFilesMap.put(LARGE, this.originalImage);
             imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
             imageFilesMap.put(THUMB, File.createTempFile(THUMB + "_", ".jpg", repository));
 
-            //execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
+            // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
             imageFilesMap.forEach(1, (size, imageFile) -> {
                 ImageInformation imageData = resize(imageFile,sizesMap.get(size));
 
@@ -111,25 +107,6 @@ public class PhotoResizer {
                 imagesURLMap.put(size + "_url",uploadedURL);
                 imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
                 imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
-                //imageFilesMap.get(size).delete();
-                /*
-                ADD This to imagesURLMAP
-                t.string   "name"
-                t.string   "description"
-                t.datetime "created_at",    null: false
-                t.datetime "updated_at",    null: false
-                t.integer  "album_id"
-                t.string   "url"
-                t.string   "thumb_url"
-                t.integer  "thumb_height"
-                t.integer  "thumb_width"
-                t.string   "medium_url"
-                t.integer  "medium_height"
-                t.integer  "medium_width"
-                t.string   "large_url"
-                t.integer  "large_height"
-                t.integer  "large_width"
-                 */
             });
         }
         catch (MalformedInputException e) {
@@ -147,7 +124,7 @@ public class PhotoResizer {
                 imageFilesMap.remove(image);
             }
             if(imageFilesMap.isEmpty()) {
-                //this way we make sure all the resize threads are done
+                // This way we make sure all the resize threads are done
                 this.originalImage.delete();
                 originalBuffImage.flush();
             }
@@ -175,10 +152,9 @@ public class PhotoResizer {
 
     private ImageInformation resize(File resizedImageFile, int maxSize) {
         ImageInformation imageData = new ImageInformation(1,0,0);
-        double scale;
         try {
+            double scale;
             if(maxSize == -1) {
-                scale = 1;
                 imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
                 return imageData;
             }
@@ -190,7 +166,7 @@ public class PhotoResizer {
             }
             int widthScale = (int) round(scale * originalBuffImage.getWidth());
             int heightScale = (int) round(scale * originalBuffImage.getHeight());
-            return imageData = this.resize(resizedImageFile, widthScale, heightScale);
+            return this.resize(resizedImageFile, widthScale, heightScale);
         }
         catch (Exception e) {
             LOGGER.debug("This is the general exception message: " + e.getMessage());
@@ -203,7 +179,6 @@ public class PhotoResizer {
         try {
             resizedBuffImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Image tmp = this.originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
-            //Bicubic resize doesn't work well in Java -- scale_smooth gives photoshop-like resizing
             resizedBuffImage.getGraphics().drawImage(tmp, 0, 0, null);
 
             writeJpg(resizedImageFile, resizedBuffImage, compressionQuality);
@@ -235,15 +210,11 @@ public class PhotoResizer {
         try {
             ImageOutputStream ios = ImageIO.createImageOutputStream(fileHandle);
             ArrayList<TagInfo> excludes= new ArrayList<>();
-			/*excludes.add(TiffConstants.TIFF_TAG_ORIENTATION);//clears the orientation tags
-			excludes.add(TiffConstants.EXIF_TAG_ORIENTATION);//clears the orientation tags
-			excludes.add(TiffConstants.EXIF_TAG_EXIF_IMAGE_WIDTH);//clears the width tags
-			excludes.add(TiffConstants.EXIF_TAG_EXIF_IMAGE_LENGTH);//clears the hieght tags*/
 
             HashMap<TagInfo, Integer> tagUpdates = new HashMap<>();
             orientation = 1;
-            tagUpdates.put(TiffConstants.TIFF_TAG_ORIENTATION,orientation);//sets the orientation tags
-            tagUpdates.put(TiffConstants.EXIF_TAG_ORIENTATION,orientation);//sets the orientation tags
+            tagUpdates.put(TiffConstants.TIFF_TAG_ORIENTATION,orientation); // Sets the orientation tags
+            tagUpdates.put(TiffConstants.EXIF_TAG_ORIENTATION,orientation); // Sets the orientation tags
             tagUpdates.put(TiffConstants.EXIF_TAG_EXIF_IMAGE_WIDTH, resizedImage.getWidth(null));
             tagUpdates.put(TiffConstants.EXIF_TAG_EXIF_IMAGE_LENGTH, resizedImage.getHeight(null));
 
@@ -263,12 +234,10 @@ public class PhotoResizer {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
             TiffImageMetadata data=null;
-            TiffImageData imageData = null;
             if (meta != null) {
                 data = meta.getExif();
-                imageData = meta.getRawImageData();
             }
-            orientation=0;
+            orientation = 0;
             if (data != null) {
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
                 if(orientation == 1) return;
@@ -290,7 +259,6 @@ public class PhotoResizer {
     }
 
     private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) throws Exception {
-
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 
         BufferedImage destinationImage = op.createCompatibleDestImage(image, (image.getType() == BufferedImage.TYPE_BYTE_GRAY) ? image.getColorModel() : null);
@@ -301,7 +269,7 @@ public class PhotoResizer {
         return destinationImage;
     }
 
-    public static class ImageInformation { //inner class
+    public static class ImageInformation { // Inner class
         final int orientation;
         final int width;
         final int height;
@@ -312,14 +280,12 @@ public class PhotoResizer {
             this.height = height;
         }
 
-        public String toString()
-        {
+        public String toString() {
             return String.format("%dx%d,%d", this.width, this.height, this.orientation);
         }
     }
 
     private static AffineTransform getExifTransformation(ImageInformation info) {
-
         AffineTransform t = new AffineTransform();
 
         switch (info.orientation) {
@@ -356,29 +322,24 @@ public class PhotoResizer {
                 t.rotate(  3 * Math.PI / 2);
                 break;
         }
-
         return t;
-
-      }
+    }
 
     private boolean s3FileUpload(File fileToUpload,String keyName) {
-
         String existingBucketName = PhotoResizerConfiguration.getS3BucketName();
 
         TransferManager tm = new TransferManager(new EnvironmentVariableCredentialsProvider());
 
         try {
-            // TransferManager processes all transfers asynchronously,
-            // so this call will return immediately.
-            keyName = keyName.replaceFirst("^/" + existingBucketName,"");//sometimes the URL's come in with the bucketname to start with
-            keyName = keyName.replaceFirst("^/", "");//this is because the original key should not have a starting slash
+            // TransferManager processes all transfers asynchronously, so this call will return immediately.
+            keyName = keyName.replaceFirst("^/" + existingBucketName,""); // Sometimes the URL's come in with the bucketname to start with
+            keyName = keyName.replaceFirst("^/", ""); // This is because the original key should not have a starting slash
             Upload upload = tm.upload(existingBucketName, keyName, fileToUpload);
             // You can poll your transfer's status to check its progress
             if (!upload.isDone()) {
                 System.out.println("Transfer: " + upload.getDescription());
                 System.out.println("  - State: " + upload.getState());
-                System.out.println("  - Progress: "
-                        + upload.getProgress().getBytesTransferred());
+                System.out.println("  - Progress: " + upload.getProgress().getBytesTransferred());
             }
 
             // Transfers also allow you to set a ProgressListener to receive
@@ -391,15 +352,15 @@ public class PhotoResizer {
             }
         }
         catch (AmazonClientException amazonClientException) {
-            boolean madeit = false;
+            boolean madeIt = false;
             if (s3ReAttempts < 3) {
                 s3ReAttempts++;
                 LOGGER.error("Struggling to upload file: Attempt" + s3ReAttempts);
-                madeit = s3FileUpload(fileToUpload, keyName);
+                madeIt = s3FileUpload(fileToUpload, keyName);
             }
             LOGGER.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
             amazonClientException.printStackTrace();
-            return madeit;
+            return madeIt;
         }
         catch (InterruptedException e) {
             LOGGER.error("Unable to upload file, upload was aborted:" + e.getMessage());
