@@ -20,29 +20,19 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Created by cstetson on 9/23/15.
- * Copyright (C) 2015 Nginx, Inc.
+ * Copyright (C) 2017 NGINX, Inc.
  */
-public class ExifManager
-{
+
+public class ExifManager {
     private static Logger logger = Logger.getLogger("com.nginx.image");
 
-    public static boolean copyExifData(File sourceFile, File destFile, List<TagInfo> excludedFields)
-    {
-        HashMap nullHash = null;
-        boolean copied = copyExifData(sourceFile, destFile, excludedFields, nullHash);
-        return copied;
-    }
-
-    public static boolean copyExifData(File sourceFile, File destFile, List<TagInfo> excludedFields,
-                                       HashMap<TagInfo,Integer> updatedFields)
-    {
+    static void copyExifData(File sourceFile, File destFile, List<TagInfo> excludedFields,
+                             HashMap<TagInfo, Integer> updatedFields) {
         String tempFileName = destFile.getAbsolutePath() + ".tmp";
         File tempFile = null;
         OutputStream tempStream = null;
 
-        try
-        {
+        try {
             tempFile = new File (tempFileName);
 
             TiffOutputSet sourceSet = getSanselanOutputSet(sourceFile, TiffConstants.DEFAULT_TIFF_BYTE_ORDER);
@@ -54,30 +44,29 @@ public class ExifManager
             // technically possible to copy this data by changing the byte
             // order of the data, but handling this case is outside the scope
             // of this implementation
-            if (sourceSet.byteOrder != destSet.byteOrder) logger.debug("byteOrder is not the same??!?");//return false;
+            if (sourceSet.byteOrder != destSet.byteOrder) { logger.debug("byteOrder is not the same."); }
 
             destSet.getOrCreateExifDirectory();
             sourceSet.getOrCreateExifDirectory();
 
             // Go through the source directories
             List<?> sourceDirectories = sourceSet.getDirectories();
-            for (int i=0; i<sourceDirectories.size(); i++)
-            {
-                TiffOutputDirectory sourceDirectory = (TiffOutputDirectory)sourceDirectories.get(i);
+            for (Object sourceDirectory1 : sourceDirectories) {
+                TiffOutputDirectory sourceDirectory = (TiffOutputDirectory) sourceDirectory1;
                 TiffOutputDirectory destinationDirectory = getOrCreateExifDirectory(destSet, sourceDirectory);
 
-                if (destinationDirectory == null) continue; // failed to create
+                if (destinationDirectory == null) {
+                    continue;
+                } // Failed to create
 
                 // Loop the fields
                 List<?> sourceFields = sourceDirectory.getFields();
-                for (int j=0; j<sourceFields.size(); j++)
-                {
+                for (Object sourceField1 : sourceFields) {
                     // Get the source field
-                    TiffOutputField sourceField = (TiffOutputField) sourceFields.get(j);
+                    TiffOutputField sourceField = (TiffOutputField) sourceField1;
 
                     // Check exclusion list
-                    if (excludedFields != null && excludedFields.contains(sourceField.tagInfo))
-                    {
+                    if (excludedFields != null && excludedFields.contains(sourceField.tagInfo)) {
                         destinationDirectory.removeField(sourceField.tagInfo);
                         continue;
                         //This means that removing a filed takes precedence over updating a field
@@ -86,8 +75,7 @@ public class ExifManager
                     // Remove any existing field
                     destinationDirectory.removeField(sourceField.tagInfo);
 
-                    if (updatedFields != null && updatedFields.containsKey(sourceField.tagInfo))
-                    {
+                    if (updatedFields != null && updatedFields.containsKey(sourceField.tagInfo)) {
                         TiffOutputField updatedTag = TiffOutputField.create(
                                 sourceField.tagInfo,
                                 destSet.byteOrder, updatedFields.get(sourceField.tagInfo));
@@ -106,52 +94,29 @@ public class ExifManager
             tempStream.close();
 
             // Replace file
-            if (destFile.delete())
-            {
+            if (destFile.delete()) {
                 tempFile.renameTo(destFile);
             }
-
-            return true;
         }
-        catch (ImageReadException exception)
-        {
+        catch (ImageReadException | ImageWriteException | IOException exception) {
             exception.printStackTrace();
-        }
-        catch (ImageWriteException exception)
-        {
-            exception.printStackTrace();
-        }
-        catch (IOException exception)
-        {
-            exception.printStackTrace();
-        }
-        finally
-        {
-            if (tempStream != null)
-            {
-                try
-                {
+        } finally {
+            if (tempStream != null) {
+                try {
                     tempStream.close();
                 }
-                catch (IOException e)
-                {
-                }
+                catch (IOException ignored) {}
             }
 
-            if (tempFile != null)
-            {
-                if (tempFile.exists()) tempFile.delete();
+            if (tempFile != null) {
+                if (tempFile.exists()) { tempFile.delete(); }
             }
         }
-
-        return false;
     }
 
-    public static int getOrientation(File imageFile)
-    {
+    public static int getOrientation(File imageFile) {
         int orientation=0;
-        try
-        {
+        try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(imageFile));
             TiffImageMetadata data=null;
             if (meta != null) {
@@ -161,27 +126,23 @@ public class ExifManager
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
             }
 
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.error(e.getMessage());
         }
         return orientation;
     }
 
-    public static TiffOutputSet getSanselanOutputSet(File jpegImageFile, int defaultByteOrder)
-            throws IOException, ImageReadException, ImageWriteException
-    {
+    private static TiffOutputSet getSanselanOutputSet(File jpegImageFile, int defaultByteOrder)
+            throws IOException, ImageReadException, ImageWriteException {
         TiffImageMetadata exif = null;
         TiffOutputSet outputSet = null;
 
         IImageMetadata metadata = Sanselan.getMetadata(jpegImageFile);
         JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
-        if (jpegMetadata != null)
-        {
+        if (jpegMetadata != null) {
             exif = jpegMetadata.getExif();
 
-            if (exif != null)
-            {
+            if (exif != null) {
                 outputSet = exif.getOutputSet();
             }
         }
@@ -195,18 +156,14 @@ public class ExifManager
         return outputSet;
     }
 
-    private static TiffOutputDirectory getOrCreateExifDirectory(TiffOutputSet outputSet, TiffOutputDirectory outputDirectory)
-    {
+    private static TiffOutputDirectory getOrCreateExifDirectory(TiffOutputSet outputSet, TiffOutputDirectory outputDirectory) {
         TiffOutputDirectory result = outputSet.findDirectory(outputDirectory.type);
         if (result != null)
             return result;
         result = new TiffOutputDirectory(outputDirectory.type);
-        try
-        {
+        try {
             outputSet.addDirectory(result);
-        }
-        catch (ImageWriteException e)
-        {
+        } catch (ImageWriteException e) {
             return null;
         }
         return result;

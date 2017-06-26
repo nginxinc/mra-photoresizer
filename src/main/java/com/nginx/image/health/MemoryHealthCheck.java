@@ -5,10 +5,10 @@ import com.codahale.metrics.health.HealthCheck;
 import java.text.NumberFormat;
 
 /**
- * Created by cstetson on 10/9/15.
+ * Copyright (C) 2017 NGINX, Inc.
  */
-public class MemoryHealthCheck extends HealthCheck
-{
+
+public class MemoryHealthCheck extends HealthCheck {
     public MemoryHealthCheck() {}
 
     @Override
@@ -18,8 +18,7 @@ public class MemoryHealthCheck extends HealthCheck
         long freeMemory = runtime.freeMemory();
 
         StringBuilder sb = memoryUsed();
-        if ((1 - ((float) freeMemory/allocatedMemory)) > .8)
-        {
+        if ((1 - ((float)freeMemory/allocatedMemory)) > 0.8) {
             System.out.println("*****UNHEALTHY*******: " + sb.toString());
             runtime.gc();
             System.out.println("*****GC Called*******: " + sb.toString());;
@@ -28,8 +27,7 @@ public class MemoryHealthCheck extends HealthCheck
         return Result.healthy();
     }
 
-    protected StringBuilder memoryUsed()
-    {
+    protected StringBuilder memoryUsed() {
         Runtime runtime = Runtime.getRuntime();
 
         NumberFormat format = NumberFormat.getInstance();
