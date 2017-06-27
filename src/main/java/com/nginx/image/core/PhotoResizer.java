@@ -57,7 +57,7 @@ public class PhotoResizer {
     private final static String THUMB = PhotoResizerConfiguration.getTHUMB();
     private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
     private String keyBase;
-    private Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
+    private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
     private int s3ReAttempts = 0;
     private String classInstance;
@@ -258,7 +258,7 @@ public class PhotoResizer {
         }
     }
 
-    private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) throws Exception {
+    private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) {
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 
         BufferedImage destinationImage = op.createCompatibleDestImage(image, (image.getType() == BufferedImage.TYPE_BYTE_GRAY) ? image.getColorModel() : null);

@@ -13,10 +13,10 @@ import org.hibernate.validator.constraints.*;
  */
 
 public class PhotoResizerConfiguration extends Configuration {
-    private static EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
+    private static final EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
 
     @NotEmpty
-    private static String s3BucketName =  echoEnv.lookup("S3_BUCKET");
+    private static final String s3BucketName =  echoEnv.lookup("S3_BUCKET");
 
     @NotEmpty
     private final static String LARGE = "large";
@@ -46,48 +46,27 @@ public class PhotoResizerConfiguration extends Configuration {
             THUMB, THUMB_SIZE
     );
 
-    public static String getS3BucketName()
-    {
+    public static String getS3BucketName() {
         return s3BucketName;
     }
 
-    public static String getLARGE()
-    {
+    public static String getLARGE() {
         return LARGE;
     }
 
-    public static String getMEDIUM()
-    {
+    public static String getMEDIUM() {
         return MEDIUM;
     }
 
-    public static String getTHUMB()
-    {
+    public static String getTHUMB() {
         return THUMB;
     }
 
-    public static Integer getLargeSize()
-    {
-        return LARGE_SIZE;
-    }
-
-    public static Integer getMediumSize()
-    {
-        return MEDIUM_SIZE;
-    }
-
-    public static Integer getThumbSize()
-    {
-        return THUMB_SIZE;
-    }
-
-    public static ImmutableMap<String, Integer> getSizesMap()
-    {
+    public static ImmutableMap<String, Integer> getSizesMap() {
         return sizesMap;
     }
 
-    public static Float getCompressionQuality()
-    {
+    public static Float getCompressionQuality() {
         return COMPRESSION_QUALITY;
     }
 }

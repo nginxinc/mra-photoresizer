@@ -16,7 +16,7 @@ import io.dropwizard.setup.Environment;
  //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
-public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
+class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
     public static void main(final String[] args) throws Exception {
         new PhotoResizerApplication().run(args);
     }

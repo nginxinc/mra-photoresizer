@@ -1,12 +1,6 @@
 package com.nginx.image.core;
 
-import com.google.common.base.Optional;
-import com.nginx.image.PhotoResizerConfiguration;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.ResourceHelpers;
-import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;

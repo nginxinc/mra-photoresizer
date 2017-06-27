@@ -26,7 +26,7 @@ import java.util.List;
  */
 
 class ExifManager {
-    private static Logger logger = Logger.getLogger("com.nginx.image");
+    private static final Logger logger = Logger.getLogger("com.nginx.image");
 
     static void copyExifData (File sourceFile, File destFile, List<TagInfo> excludedFields,
                              HashMap<TagInfo, Integer> updatedFields) {
