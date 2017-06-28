@@ -6,22 +6,17 @@ import io.dropwizard.configuration.EnvironmentVariableLookup;
 import org.hibernate.validator.constraints.*;
 
 /**
- * Created by cstetson on 10/9/15.
- * Copyright (C) 2015 Nginx, Inc.
+ //  PhotoResizerConfiguration.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerConfiguration extends Configuration {
-
-    static EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
-
-    @NotEmpty
-    private static String s3BucketName =  echoEnv.lookup("S3_BUCKET"); //this should be overridden by environment variables
+    private static final EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
 
     @NotEmpty
-    private static String redisCacheUrl = echoEnv.lookup("REDIS_CACHE_URL"); //this should be overridden by environment variables
-
-    @NotEmpty
-    private static String redisCachePort = echoEnv.lookup("REDIS_CACHE_PORT"); //this should be overridden by environment variables
+    private static final String s3BucketName =  echoEnv.lookup("S3_BUCKET");
 
     @NotEmpty
     private final static String LARGE = "large";
@@ -33,7 +28,7 @@ public class PhotoResizerConfiguration extends Configuration {
     private final static String THUMB = "thumb";
 
     @NotEmpty
-    private final static Integer LARGE_SIZE = -1;//means stay the same
+    private final static Integer LARGE_SIZE = -1; // Means stay the same
 
     @NotEmpty
     private final static Integer MEDIUM_SIZE = 640;
@@ -46,62 +41,32 @@ public class PhotoResizerConfiguration extends Configuration {
 
     @NotEmpty
     private static final ImmutableMap<String, Integer> sizesMap = ImmutableMap.of(
-                LARGE, LARGE_SIZE,
-                MEDIUM, MEDIUM_SIZE,
+            LARGE, LARGE_SIZE,
+            MEDIUM, MEDIUM_SIZE,
             THUMB, THUMB_SIZE
-        );
+    );
 
-    public static String getS3BucketName()
-    {
+    public static String getS3BucketName() {
         return s3BucketName;
     }
 
-    public static String getRedisCacheUrl() { return redisCacheUrl; }//TODO:round robin the url
-
-    public static Integer getRedisCachePort()
-    {
-        return new Integer(redisCachePort);
-    }
-
-    public static String getLARGE()
-    {
+    public static String getLARGE() {
         return LARGE;
     }
 
-    public static String getMEDIUM()
-    {
+    public static String getMEDIUM() {
         return MEDIUM;
     }
 
-    public static String getTHUMB()
-    {
+    public static String getTHUMB() {
         return THUMB;
     }
 
-    public static Integer getLargeSize()
-    {
-        return LARGE_SIZE;
-    }
-
-    public static Integer getMediumSize()
-    {
-        return MEDIUM_SIZE;
-    }
-
-    public static Integer getThumbSize()
-    {
-        return THUMB_SIZE;
-    }
-
-    public static ImmutableMap<String, Integer> getSizesMap()
-    {
+    public static ImmutableMap<String, Integer> getSizesMap() {
         return sizesMap;
     }
 
-    public static Float getCompressionQuality()
-    {
+    public static Float getCompressionQuality() {
         return COMPRESSION_QUALITY;
     }
-
-
 }

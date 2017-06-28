@@ -10,12 +10,13 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 
 /**
- * Created by cstetson on 10/9/15.
- * Copyright (C) 2015 Nginx, Inc.
+ //  PhotoresizerApplication.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
-public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
-
+class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
     public static void main(final String[] args) throws Exception {
         new PhotoResizerApplication().run(args);
     }
@@ -26,22 +27,19 @@ public class PhotoResizerApplication extends Application<PhotoResizerConfigurati
     }
 
     @Override
-    public void initialize(final Bootstrap<PhotoResizerConfiguration> bootstrap)
-    {
-        
-            // Enable variable substitution with environment variables
-            bootstrap.setConfigurationSourceProvider(
-                    new SubstitutingSourceProvider(
-                            bootstrap.getConfigurationSourceProvider(),
-                            new EnvironmentVariableSubstitutor(false)
-                    )
-            );
+    public void initialize(final Bootstrap<PhotoResizerConfiguration> bootstrap) {
+        // Enable variable substitution with environment variables
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(
+                        bootstrap.getConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false)
+                )
+        );
     }
 
     @Override
     public void run(final PhotoResizerConfiguration configuration,
-                    final Environment environment)
-    {
+                    final Environment environment) {
         final PhotoResizerResource resource = new PhotoResizerResource();
 
         final DiskHealthCheck diskHealthCheck = new DiskHealthCheck();
@@ -52,5 +50,4 @@ public class PhotoResizerApplication extends Application<PhotoResizerConfigurati
 
         environment.jersey().register(resource);
     }
-
 }
