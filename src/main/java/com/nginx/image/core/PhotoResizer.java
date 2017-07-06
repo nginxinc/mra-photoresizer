@@ -1,7 +1,12 @@
 package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -328,7 +333,11 @@ public class PhotoResizer {
     private boolean s3FileUpload(File fileToUpload,String keyName) {
         String existingBucketName = PhotoResizerConfiguration.getS3BucketName();
 
-        TransferManager tm = new TransferManager(new EnvironmentVariableCredentialsProvider());
+        AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(), PhotoResizerConfiguration.getSecretKey());
+        AmazonS3 s3Client = new AmazonS3Client(credentials);
+        s3Client.setEndpoint(PhotoResizerConfiguration.getS3Endpoint());
+
+        TransferManager tm = new TransferManager(s3Client);
 
         try {
             // TransferManager processes all transfers asynchronously, so this call will return immediately.
