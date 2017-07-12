@@ -1,7 +1,7 @@
 FROM openjdk:latest
 
 ENV USE_NGINX_PLUS true
-ENV AMPLIFY_KEY ''
+
 
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \

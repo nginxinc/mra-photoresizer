@@ -25,12 +25,3 @@ else
 
 #  /usr/local/sbin/generate_config -p /etc/nginx/fabric_config.yaml -t /etc/nginx/nginx-fabric.conf.j2 > /etc/nginx/nginx-fabric.conf
 fi
-
-echo "Checking amplify key: $AMPLIFY_KEY";
-
-# install nginx amplify
-if [ "$AMPLIFY_KEY" != "" ];
-then
-    curl -L -O https://github.com/nginxinc/nginx-amplify-agent/raw/master/packages/install.sh
-    API_KEY="$AMPLIFY_KEY" AMPLIFY_HOSTNAME="$AMPLIFY_HOSTNAME" sh ./install.sh
-fi
