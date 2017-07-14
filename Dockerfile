@@ -41,21 +41,15 @@ RUN mkdir -p /etc/ssl/nginx && \
 
 # Install nginx
 ADD install-nginx.sh /usr/local/bin/
+COPY ./nginx /etc/nginx/
 RUN /usr/local/bin/install-nginx.sh
 
 # forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 	ln -sf /dev/stderr /var/log/nginx/error.log
 
-COPY ./nginx /etc/nginx/
 RUN chown -R nginx /var/log/nginx/
 COPY /start.sh /app/
-
-
-# Install and run NGINX config generator
-RUN wget -q https://s3-us-west-1.amazonaws.com/fabric-model/config-generator/generate_config
-RUN chmod +x generate_config && \
-    ./generate_config -p /etc/nginx/fabric_config.yaml > /etc/nginx/nginx-fabric.conf
 
 #Java app
 COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
