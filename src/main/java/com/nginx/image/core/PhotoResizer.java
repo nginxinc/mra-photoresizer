@@ -131,7 +131,10 @@ public class PhotoResizer {
             if(imageFilesMap.isEmpty()) {
                 // This way we make sure all the resize threads are done
                 this.originalImage.delete();
-                originalBuffImage.flush();
+
+                if (originalBuffImage != null) {
+                    originalBuffImage.flush();
+                }
             }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
