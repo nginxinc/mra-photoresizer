@@ -254,14 +254,9 @@ public class PhotoResizer {
             originalBuffImage = transformImage(originalBuffImage,t);
             writeJpg(originalImage, originalBuffImage, compressionQuality);
             originalBuffImage.flush();
-        }
-        catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             LOGGER.debug("This is the File exception message: " + e.getMessage() + "\n");
-        }
-        catch (URISyntaxException e) {
-            LOGGER.debug("This is the URI exception message: " + e.getMessage() + "\n");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOGGER.debug("This is the general exception message: " + e.getMessage());
         }
     }
