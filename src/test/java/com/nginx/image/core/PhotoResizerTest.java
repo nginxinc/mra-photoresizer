@@ -1,20 +1,16 @@
 package com.nginx.image.core;
 
-import com.google.common.base.Optional;
-import com.nginx.image.PhotoResizerConfiguration;
-import io.dropwizard.testing.ConfigOverride;
-import io.dropwizard.testing.ResourceHelpers;
-import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import javax.ws.rs.client.Client;
 
 /**
- * Created by cstetson on 10/9/15.
- * Copyright (C) 2015 Nginx, Inc.
+ //  PhotoResizerTest.java
+ //  PhotoResizer
+ //
+ //  Copyright © 2017 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerTest
