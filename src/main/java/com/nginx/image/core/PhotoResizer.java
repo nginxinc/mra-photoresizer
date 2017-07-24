@@ -1,10 +1,8 @@
 package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
@@ -14,8 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.nginx.image.PhotoResizerConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
@@ -23,6 +19,8 @@ import org.apache.sanselan.formats.tiff.TiffImageMetadata;
 import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
 import org.apache.sanselan.formats.tiff.constants.TagInfo;
 import org.apache.sanselan.formats.tiff.constants.TiffConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.*;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
@@ -34,11 +32,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Math.round;
@@ -333,7 +332,7 @@ public class PhotoResizer {
 
         AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(), PhotoResizerConfiguration.getSecretKey());
         AmazonS3 s3Client = new AmazonS3Client(credentials);
-        s3Client.setEndpoint(PhotoResizerConfiguration.getS3Endpoint());
+        s3Client.setEndpoint("http://fake-s3.mra.nginxps.com");
 
         TransferManager tm = new TransferManager(s3Client);
 
