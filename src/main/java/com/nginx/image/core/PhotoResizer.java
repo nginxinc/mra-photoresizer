@@ -5,6 +5,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -333,6 +334,7 @@ public class PhotoResizer {
         AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(), PhotoResizerConfiguration.getSecretKey());
         AmazonS3 s3Client = new AmazonS3Client(credentials);
         s3Client.setEndpoint("http://fake-s3.mra.nginxps.com");
+        s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
         TransferManager tm = new TransferManager(s3Client);
 
