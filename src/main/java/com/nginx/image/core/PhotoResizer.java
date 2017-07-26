@@ -87,11 +87,16 @@ public class PhotoResizer {
             System.out.println("Start Try: Keybase and URL: " + this.keyBase + " : " +imageURL + classInstance);
             // We need to use files because the Sanselan EXIF libraries expect it
             File repository = Files.createTempDir();
+            System.out.println("TEST1");
             // Configure a repository (to ensure a secure temp location is used)
             this.originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
+            System.out.println("TEST2");
             FileUtils.copyURLToFile(jpgURL, this.originalImage); // This retains the EXIF information
+            System.out.println("TEST3");
             originalBuffImage = ImageIO.read(this.originalImage);
+            System.out.println("TEST4");
             this.width = originalBuffImage.getWidth(null);
+            System.out.println("TEST5");
             this.height = originalBuffImage.getHeight(null);
             System.out.println("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
