@@ -120,13 +120,13 @@ public class PhotoResizer {
             });
         }
         catch (MalformedInputException e) {
-            LOGGER.error("URL error: " + e.getMessage());
+            LOGGER.error("URL error: ", e);
         }
         catch (FileSystemException e) {
-            LOGGER.error("FileSystem error: " + e.getMessage());
+            LOGGER.error("FileSystem error: ", e);
         }
         catch (Exception e) {
-            LOGGER.error("General error: " + e.getMessage());
+            LOGGER.error("General error: ", e);
         }
         finally {
             for(String image:imageFilesMap.keySet()) {
@@ -197,12 +197,8 @@ public class PhotoResizer {
             writeJpg(resizedImageFile, resizedBuffImage, compressionQuality);
             resizedBuffImage.flush();
             tmp.flush();
-        }
-        catch (NullPointerException e) {
-            LOGGER.debug("This is the null pointer exception message: " + e.getMessage() + "\n");
-        }
-        catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("This is the general exception message: ", e);
         }
         return new ImageInformation(1, width, height);
     }
@@ -238,7 +234,7 @@ public class PhotoResizer {
             ios.close();
         }
         catch (IOException e) {
-            LOGGER.debug("caught IOException while writing " + fileHandle.getPath());
+            LOGGER.error("caught IOException while writing " + fileHandle.getPath());
             e.printStackTrace();
         }
     }
@@ -259,10 +255,8 @@ public class PhotoResizer {
             originalBuffImage = transformImage(originalBuffImage,t);
             writeJpg(originalImage, originalBuffImage, compressionQuality);
             originalBuffImage.flush();
-        } catch (NullPointerException e) {
-            LOGGER.debug("This is the File exception message: " + e.getMessage() + "\n");
         } catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+            LOGGER.error("This is the general exception message: ", e);
         }
     }
 
@@ -376,7 +370,7 @@ public class PhotoResizer {
             return madeIt;
         }
         catch (InterruptedException e) {
-            LOGGER.error("Unable to upload file, upload was aborted:" + e.getMessage());
+            LOGGER.error("Unable to upload file, upload was aborted:", e);
             e.printStackTrace();
             return false;
         }
