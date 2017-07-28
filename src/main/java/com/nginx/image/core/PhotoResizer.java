@@ -180,9 +180,9 @@ public class PhotoResizer {
             int widthScale = (int) round(scale * originalBuffImage.getWidth());
             int heightScale = (int) round(scale * originalBuffImage.getHeight());
             return this.resize(resizedImageFile, widthScale, heightScale);
-        }
-        catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Caught exception during resize for file " + resizedImageFile +
+                    " with maxSize " + maxSize, e);
         }
         return imageData;
     }
