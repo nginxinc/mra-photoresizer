@@ -1,12 +1,11 @@
 package com.nginx.image.core;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,17 +13,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.nginx.image.PhotoResizerConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.commons.io.FileUtils;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
 import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
 import org.apache.sanselan.formats.tiff.constants.TagInfo;
 import org.apache.sanselan.formats.tiff.constants.TiffConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.imageio.*;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
@@ -34,11 +36,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.FileSystemException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.Math.round;
@@ -52,28 +55,39 @@ import static java.lang.Math.round;
 
 
 public class PhotoResizer {
-    private BufferedImage originalBuffImage;
-    private File originalImage;
-    private int orientation;
-    private int width = 0;
-    private int height = 0;
+//    private BufferedImage originalBuffImage;
+//    private File originalImage;
+//    private int orientation;
+//    private int width = 0;
+//    private int height = 0;
     private final static String LARGE = PhotoResizerConfiguration.getLARGE();
     private final static String MEDIUM = PhotoResizerConfiguration.getMEDIUM();
     private final static String THUMB = PhotoResizerConfiguration.getTHUMB();
     private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
-    private String keyBase;
     private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
     private int s3ReAttempts = 0;
+    private final TransferManager transferManager;
+    private final String existingBucketName;
     private String classInstance;
 
 
-    public PhotoResizer() {}
+    public PhotoResizer() {
+        AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(),
+                PhotoResizerConfiguration.getSecretKey());
+        AmazonS3Client s3Client = new AmazonS3Client(credentials);
+        s3Client.setEndpoint("http://fake-s3.mra.nginxps.com");
+        s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
+
+        transferManager = new TransferManager(s3Client);
+        existingBucketName = PhotoResizerConfiguration.getS3BucketName();
+
+    }
 
     public String resizeImage(String imageURL) {
         this.classInstance = " + class instance = " + System.identityHashCode(this);
-        System.out.println("Start App: URL " + imageURL + classInstance);
-        originalBuffImage = null;
+        LOGGER.info("Start App: URL " + imageURL + classInstance);
+
         String resizedImagesMapAsJSON;
         ConcurrentHashMap<String,File> imageFilesMap;
         imageFilesMap = new ConcurrentHashMap<>();
@@ -82,60 +96,71 @@ public class PhotoResizer {
 
         try {
             URL jpgURL = new URL(imageURL);
-            this.keyBase = jpgURL.getPath();
-            this.keyBase = this.keyBase.replaceAll("original.*$","");
-            System.out.println("Start Try: Keybase and URL: " + this.keyBase + " : " +imageURL + classInstance);
+            final String keyBase = jpgURL.getPath().replaceAll("original.*$","");
+            LOGGER.info("Start Try: Keybase and URL: " + keyBase + " : " + imageURL + classInstance);
             // We need to use files because the Sanselan EXIF libraries expect it
             File repository = Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
-            this.originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
-            FileUtils.copyURLToFile(jpgURL, this.originalImage); // This retains the EXIF information
-            originalBuffImage = ImageIO.read(this.originalImage);
-            this.width = originalBuffImage.getWidth(null);
-            this.height = originalBuffImage.getHeight(null);
-            System.out.println("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
+            File originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
 
-            this.transformOriginalImage(); // This makes sure the originalImage is oriented correctly
+            Download originalDownload = transferManager.download(existingBucketName,
+                    keyBase.replace("/mra-images/", "") + "original.jpg", originalImage);
 
-            imageFilesMap.put(LARGE, this.originalImage);
-            imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
-            imageFilesMap.put(THUMB, File.createTempFile(THUMB + "_", ".jpg", repository));
+            if (!originalDownload.isDone()) {
+                LOGGER.info("Transfer: " + originalDownload.getDescription());
+                LOGGER.info("  - State: " + originalDownload.getState());
+                LOGGER.info("  - Progress: " + originalDownload.getProgress().getBytesTransferred());
+            }
 
-            // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
-            imageFilesMap.forEach(1, (size, imageFile) -> {
-                ImageInformation imageData = resize(imageFile,sizesMap.get(size));
+            // Transfers also allow you to set a ProgressListener to receive
+            // asynchronous notifications about your transfer's progress.
 
-                String keyName = keyBase + size + ".jpg";
-                System.out.println("Mid App: keyname " + keyName + classInstance);
-                s3FileUpload(imageFilesMap.get(size),keyName);
-                String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
-                imagesURLMap.put(size + "_url",uploadedURL);
-                imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
-                imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
-            });
+            originalDownload.waitForCompletion();
+            if(originalDownload.isDone()) {
+                LOGGER.info("Transfer: " + originalDownload.getDescription());
+                LOGGER.info("Download complete.");
+                BufferedImage originalBuffImage = ImageIO.read(originalImage);
+                int width = originalBuffImage.getWidth(null);
+                int height = originalBuffImage.getHeight(null);
+                LOGGER.info("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
+
+                this.transformOriginalImage(width, height, originalImage, originalBuffImage); // This makes sure the originalImage is oriented correctly
+
+                imageFilesMap.put(LARGE, originalImage);
+                imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
+                imageFilesMap.put(THUMB, File.createTempFile(THUMB + "_", ".jpg", repository));
+
+                // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
+                imageFilesMap.forEach(1, (size, imageFile) -> {
+                    ImageInformation imageData = resize(imageFile,sizesMap.get(size), originalBuffImage);
+
+                    String keyName = keyBase + size + ".jpg";
+                    LOGGER.info("Mid App: keyname " + keyName + classInstance);
+                    s3FileUpload(imageFilesMap.get(size),keyName);
+                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
+                    imagesURLMap.put(size + "_url",uploadedURL);
+                    imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
+                    imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
+                });
+
+            }
         }
         catch (MalformedInputException e) {
-            LOGGER.error("URL error: " + e.getMessage());
+            LOGGER.error("URL error: ", e);
         }
         catch (FileSystemException e) {
-            LOGGER.error("FileSystem error: " + e.getMessage());
+            LOGGER.error("FileSystem error: ", e);
         }
         catch (Exception e) {
-            LOGGER.error("General error: " + e.getMessage());
-        }
-        finally {
+            LOGGER.error("General error: ", e);
+        } finally {
             for(String image:imageFilesMap.keySet()) {
                 imageFilesMap.get(image).delete();
                 imageFilesMap.remove(image);
             }
-            if(imageFilesMap.isEmpty()) {
-                // This way we make sure all the resize threads are done
-                this.originalImage.delete();
-                originalBuffImage.flush();
-            }
         }
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
-        System.out.println("End App: JSON " + resizedImagesMapAsJSON + classInstance);
+        LOGGER.info("End App: JSON " + resizedImagesMapAsJSON + classInstance);
         return resizedImagesMapAsJSON;
     }
 
@@ -155,7 +180,7 @@ public class PhotoResizer {
         return imagesMapAsJSON;
     }
 
-    private ImageInformation resize(File resizedImageFile, int maxSize) {
+    private ImageInformation resize(File resizedImageFile, int maxSize, BufferedImage originalBuffImage) {
         ImageInformation imageData = new ImageInformation(1,0,0);
         try {
             double scale;
@@ -171,30 +196,26 @@ public class PhotoResizer {
             }
             int widthScale = (int) round(scale * originalBuffImage.getWidth());
             int heightScale = (int) round(scale * originalBuffImage.getHeight());
-            return this.resize(resizedImageFile, widthScale, heightScale);
-        }
-        catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+            return this.resize(resizedImageFile, widthScale, heightScale, originalBuffImage);
+        } catch (Exception e) {
+            LOGGER.error("Caught exception during resize for file " + resizedImageFile +
+                    " with maxSize " + maxSize, e);
         }
         return imageData;
     }
 
-    private ImageInformation resize(File resizedImageFile, int width, int height) {
+    private ImageInformation resize(File resizedImageFile, int width, int height, BufferedImage originalBuffImage) {
         BufferedImage resizedBuffImage;
         try {
             resizedBuffImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Image tmp = this.originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
+            Image tmp = originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
             resizedBuffImage.getGraphics().drawImage(tmp, 0, 0, null);
 
             writeJpg(resizedImageFile, resizedBuffImage, compressionQuality);
             resizedBuffImage.flush();
             tmp.flush();
-        }
-        catch (NullPointerException e) {
-            LOGGER.debug("This is the null pointer exception message: " + e.getMessage() + "\n");
-        }
-        catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("This is the general exception message: ", e);
         }
         return new ImageInformation(1, width, height);
     }
@@ -217,7 +238,7 @@ public class PhotoResizer {
             ArrayList<TagInfo> excludes= new ArrayList<>();
 
             HashMap<TagInfo, Integer> tagUpdates = new HashMap<>();
-            orientation = 1;
+            int orientation = 1;
             tagUpdates.put(TiffConstants.TIFF_TAG_ORIENTATION,orientation); // Sets the orientation tags
             tagUpdates.put(TiffConstants.EXIF_TAG_ORIENTATION,orientation); // Sets the orientation tags
             tagUpdates.put(TiffConstants.EXIF_TAG_EXIF_IMAGE_WIDTH, resizedImage.getWidth(null));
@@ -226,24 +247,24 @@ public class PhotoResizer {
             resizeWriter.setOutput(ios);
             resizeWriter.write(null, new IIOImage(resizedImage, null, null), params);
 
-            ExifManager.copyExifData(originalImage,fileHandle,excludes,tagUpdates);
+            ExifManager.copyExifData(fileHandle,fileHandle,excludes,tagUpdates);
             ios.close();
         }
         catch (IOException e) {
-            LOGGER.debug("caught IOException while writing " + fileHandle.getPath());
+            LOGGER.error("caught IOException while writing " + fileHandle.getPath());
             e.printStackTrace();
         }
     }
 
-    private void transformOriginalImage() {
+    private void transformOriginalImage(int width, int height, File originalImage, BufferedImage originalBuffImage) {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
             TiffImageMetadata data=null;
             if (meta != null) {
                 data = meta.getExif();
             }
-            orientation = 0;
-            if (data != null) {
+            int orientation = 0;
+            if (data != null && data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION) != null) {
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
                 if(orientation == 1) return;
             }
@@ -251,15 +272,8 @@ public class PhotoResizer {
             originalBuffImage = transformImage(originalBuffImage,t);
             writeJpg(originalImage, originalBuffImage, compressionQuality);
             originalBuffImage.flush();
-        }
-        catch (NullPointerException e) {
-            LOGGER.debug("This is the File exception message: " + e.getMessage() + "\n");
-        }
-        catch (URISyntaxException e) {
-            LOGGER.debug("This is the URI exception message: " + e.getMessage() + "\n");
-        }
-        catch (Exception e) {
-            LOGGER.debug("This is the general exception message: " + e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("This is the general exception message: ", e);
         }
     }
 
@@ -331,24 +345,18 @@ public class PhotoResizer {
     }
 
     private boolean s3FileUpload(File fileToUpload,String keyName) {
-        String existingBucketName = PhotoResizerConfiguration.getS3BucketName();
 
-        AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(), PhotoResizerConfiguration.getSecretKey());
-        AmazonS3 s3Client = new AmazonS3Client(credentials);
-        s3Client.setEndpoint(PhotoResizerConfiguration.getS3Endpoint());
-
-        TransferManager tm = new TransferManager(s3Client);
 
         try {
             // TransferManager processes all transfers asynchronously, so this call will return immediately.
             keyName = keyName.replaceFirst("^/" + existingBucketName,""); // Sometimes the URL's come in with the bucketname to start with
             keyName = keyName.replaceFirst("^/", ""); // This is because the original key should not have a starting slash
-            Upload upload = tm.upload(existingBucketName, keyName, fileToUpload);
+            Upload upload = transferManager.upload(existingBucketName, keyName, fileToUpload);
             // You can poll your transfer's status to check its progress
             if (!upload.isDone()) {
-                System.out.println("Transfer: " + upload.getDescription());
-                System.out.println("  - State: " + upload.getState());
-                System.out.println("  - Progress: " + upload.getProgress().getBytesTransferred());
+                LOGGER.info("Transfer: " + upload.getDescription());
+                LOGGER.info("  - State: " + upload.getState());
+                LOGGER.info("  - Progress: " + upload.getProgress().getBytesTransferred());
             }
 
             // Transfers also allow you to set a ProgressListener to receive
@@ -356,8 +364,8 @@ public class PhotoResizer {
 
             upload.waitForCompletion();
             if(upload.isDone()) {
-                System.out.println("Transfer: " + upload.getDescription());
-                System.out.println("Upload complete.");
+                LOGGER.info("Transfer: " + upload.getDescription());
+                LOGGER.info("Upload complete.");
             }
         }
         catch (AmazonClientException amazonClientException) {
@@ -372,13 +380,12 @@ public class PhotoResizer {
             return madeIt;
         }
         catch (InterruptedException e) {
-            LOGGER.error("Unable to upload file, upload was aborted:" + e.getMessage());
+            LOGGER.error("Unable to upload file, upload was aborted:", e);
             e.printStackTrace();
             return false;
-        }
-        finally {
+        } finally {
             // After the upload is complete, call shutdownNow to release the resources.
-            tm.shutdownNow();
+//            transferManager.shutdownNow();
         }
         return true;
     }
