@@ -4,6 +4,8 @@ ENV USE_NGINX_PLUS=false \
     VAULT_TOKEN=4b9f8249-538a-d75a-e6d3-69f5355c1751 \
     VAULT_ADDR=http://vault.mra.nginxps.com:8200
 
+ENV NETWORK=fabric
+
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
@@ -43,9 +45,8 @@ COPY . /build/
 WORKDIR /build
 RUN mvn clean install && \
     mvn package && \
-    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app
-
-#Java app
+    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
+    rm -r target/apidocs target/classes target/dependency-maven-plugin-markers target/generated-sources target/generated-test-sources target/javadoc-bundle-options target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 COPY ./status.html /usr/share/nginx/html/status.html
 
 WORKDIR /app
