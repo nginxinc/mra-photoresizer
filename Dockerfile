@@ -1,5 +1,7 @@
 FROM java:latest
 
+ENV NETWORK=fabric
+
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
@@ -17,6 +19,7 @@ RUN apt-get update && apt-get install -y \
 	libxml2 \
 	lsb-release \
 	unzip \
+	maven \
 	--no-install-recommends && rm -r /var/lib/apt/lists/*
 
 # Install vault client
@@ -58,8 +61,12 @@ RUN chmod +x generate_config && \
     ./generate_config -p /etc/nginx/fabric_config.yaml > /etc/nginx/nginx-fabric.conf
 
 #Java app
-COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
-COPY PhotoResizer.yaml /app/
+# COPY target/PhotoResizer-1.0.1-SNAPSHOT.jar /app/
+COPY . /app/
+WORKDIR /app
+RUN mvn clean install && \
+#    mvn clean package && \
+    rm -r target/apidocs target/classes target/dependency-maven-plugin-markers target/generated-sources target/generated-test-sources target/javadoc-bundle-options target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 COPY ./status.html /usr/share/nginx/html/status.html
 
 WORKDIR /app
