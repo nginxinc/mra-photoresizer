@@ -1,11 +1,9 @@
 FROM openjdk:latest
 
 ENV USE_NGINX_PLUS=true \
-    VAULT_TOKEN=4b9f8249-538a-d75a-e6d3-69f5355c1751 \
-    VAULT_ADDR=http://vault.mra.nginxps.com:8200
+    NETWORK=fabric
 
-ENV NETWORK=fabric
-
+COPY vault_env.sh /etc/letsencrypt/
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
