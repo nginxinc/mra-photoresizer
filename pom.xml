@@ -3,15 +3,6 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-    <artifactId>dropwizard-parent</artifactId>
-    <groupId>io.dropwizard</groupId>
-    <version>0.9.0-rc5-SNAPSHOT</version>
-  </parent>
-    <prerequisites>
-        <maven>3.0.0</maven>
-    </prerequisites>
-
     <groupId>com.nginx.image</groupId>
     <artifactId>PhotoResizer</artifactId>
     <version>1.0.1-SNAPSHOT</version>
@@ -235,20 +226,6 @@
                         <goals>
                             <goal>unpack-dependencies</goal>
                         </goals>
-                        <configuration>
-                            <artifactItems>
-                                <artifactItem>
-                                    <groupId>com.newrelic.agent.java</groupId>
-                                    <artifactId>newrelic-java</artifactId>
-                                    <version>3.28.0</version>
-                                    <type>zip</type>
-                                    <overWrite>true</overWrite>
-                                    <outputDirectory>target</outputDirectory>
-                                    <destFileName>newrelic</destFileName>
-                                </artifactItem>
-                            </artifactItems>
-                            <outputDirectory>/Location/to/unzip</outputDirectory>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

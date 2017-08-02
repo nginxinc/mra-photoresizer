@@ -1,5 +1,13 @@
 .idea
-#target/
+target/classes/
+target/dependency-maven-plugin-markers
+target/javadoc-bundle-options
+target/generated-sources
+target/generated-test-sources
+target/maven-archiver
+target/maven-status
+target/surefire-reports
+target/test-classes
 atlassian-ide-plugin.xml
 dependency-reduced-pom.xml
 logs

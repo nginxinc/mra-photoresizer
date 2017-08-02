@@ -16,16 +16,16 @@ public class PhotoResizerConfiguration extends Configuration {
     private static final EnvironmentVariableLookup echoEnv = new EnvironmentVariableLookup();
 
     @NotEmpty
-    private static final String s3BucketName =  echoEnv.lookup("S3_BUCKET");
+    private static final String s3BucketName = echoEnv.lookup("S3_BUCKET");
 
     @NotEmpty
-    private static final String accessKey =  echoEnv.lookup("AWS_ACCESS_KEY_ID");
+    private static final String accessKey = echoEnv.lookup("AWS_ACCESS_KEY_ID");
 
     @NotEmpty
-    private static final String secretKey =  echoEnv.lookup("AWS_SECRET_ACCESS_KEY");
+    private static final String secretKey = echoEnv.lookup("AWS_SECRET_ACCESS_KEY");
 
-    @NotEmpty
-    private static final String s3Endpoint =  echoEnv.lookup("S3_ENDPOINT");
+    //@NotEmpty
+    //private static final String s3Endpoint = "http://fake-s3.mra.nginxps.com";//echoEnv.lookup("S3_ENDPOINT");
 
     @NotEmpty
     private final static String LARGE = "large";
@@ -63,9 +63,9 @@ public class PhotoResizerConfiguration extends Configuration {
         return accessKey;
     }
 
-    public static String getS3Endpoint() {
-        return s3Endpoint;
-    }
+    //public static String getS3Endpoint() {
+    //    return s3Endpoint;
+    //}
 
     public static String getSecretKey() {
         return secretKey;
