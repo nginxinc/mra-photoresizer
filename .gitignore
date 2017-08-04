@@ -17,6 +17,7 @@ logs
 .env
 hs_err*
 .DS_Store
+vault_env.sh
 
 
 #Eclipse-specific
