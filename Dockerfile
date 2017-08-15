@@ -1,8 +1,11 @@
 FROM openjdk:latest
 
-ENV USE_NGINX_PLUS=true \
+ENV USE_NGINX_PLUS=false \
+    USE_VAULT=false \
+    USE_LOCAL=true \
     NETWORK=fabric
 
+COPY nginx/ssl /etc/ssl/nginx/
 COPY vault_env.sh /etc/letsencrypt/
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
@@ -38,15 +41,17 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 	ln -sf /dev/stderr /var/log/nginx/error.log && \
 	chown -R nginx /var/log/nginx/
 
-COPY start.sh PhotoResizer.yaml /app/
-COPY . /build/
+#COPY app/start.sh app/PhotoResizer.yaml /app/
+COPY app /build/
 WORKDIR /build
 RUN mvn clean install && \
-    mvn package && \
-    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
+#    mvn package && \
+#    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
     rm -r target/apidocs target/classes target/dependency-maven-plugin-markers target/generated-sources target/generated-test-sources target/javadoc-bundle-options target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 COPY ./status.html /usr/share/nginx/html/status.html
 
-WORKDIR /app
+#WORKDIR /app
+
+EXPOSE 80 8000 12005
+
 CMD ["./start.sh"]
-EXPOSE 80 8000
