@@ -1,0 +1,5 @@
+name: resizer
+resolver:
+  host: 127.0.0.11
+  ttl: 3s
+root: /usr/share/nginx/html/

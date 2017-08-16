@@ -1,13 +1,13 @@
 .idea
-target/classes/
-target/dependency-maven-plugin-markers
-target/javadoc-bundle-options
-target/generated-sources
-target/generated-test-sources
-target/maven-archiver
-target/maven-status
-target/surefire-reports
-target/test-classes
+app/target/classes/
+app/target/dependency-maven-plugin-markers
+app/target/javadoc-bundle-options
+app/target/generated-sources
+app/target/generated-test-sources
+app/target/maven-archiver
+app/target/maven-status
+app/target/surefire-reports
+app/target/test-classes
 atlassian-ide-plugin.xml
 dependency-reduced-pom.xml
 logs
@@ -17,6 +17,7 @@ logs
 .env
 hs_err*
 .DS_Store
+vault_env.sh
 
 
 #Eclipse-specific

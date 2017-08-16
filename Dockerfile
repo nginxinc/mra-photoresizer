@@ -1,11 +1,12 @@
 FROM openjdk:latest
 
 ENV USE_NGINX_PLUS=true \
-    VAULT_TOKEN=4b9f8249-538a-d75a-e6d3-69f5355c1751 \
-    VAULT_ADDR=http://vault.mra.nginxps.com:8200
+    USE_VAULT=true \
+    USE_LOCAL=false \
+    NETWORK=fabric
 
-ENV NETWORK=fabric
-
+COPY nginx/ssl /etc/ssl/nginx/
+COPY vault_env.sh /etc/letsencrypt/
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
@@ -24,11 +25,8 @@ RUN apt-get update && apt-get install -y \
 	lsb-release \
 	unzip \
 	maven \
-	--no-install-recommends && rm -r /var/lib/apt/lists/*  && \
-# Install vault client
-    wget -q https://releases.hashicorp.com/vault/0.6.0/vault_0.6.0_linux_amd64.zip && \
-    unzip -d /usr/local/bin vault_0.6.0_linux_amd64.zip && \
-    mkdir -p /etc/ssl/nginx 
+	--no-install-recommends && rm -r /var/lib/apt/lists/* && \
+    mkdir -p /etc/ssl/nginx
 
 # Install nginx
 ADD install-nginx.sh /usr/local/bin/
@@ -40,15 +38,17 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
 	ln -sf /dev/stderr /var/log/nginx/error.log && \
 	chown -R nginx /var/log/nginx/
 
-COPY start.sh PhotoResizer.yaml /app/
-COPY . /build/
+#COPY app/start.sh app/PhotoResizer.yaml /app/
+COPY app /build/
 WORKDIR /build
 RUN mvn clean install && \
-    mvn package && \
-    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
+#    mvn package && \
+#    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
     rm -r target/apidocs target/classes target/dependency-maven-plugin-markers target/generated-sources target/generated-test-sources target/javadoc-bundle-options target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 COPY ./status.html /usr/share/nginx/html/status.html
 
-WORKDIR /app
+#WORKDIR /app
+
+EXPOSE 80 8000 12005
+
 CMD ["./start.sh"]
-EXPOSE 80 8000
