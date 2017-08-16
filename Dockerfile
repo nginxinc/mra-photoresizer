@@ -1,8 +1,8 @@
 FROM openjdk:latest
 
-ENV USE_NGINX_PLUS=false \
-    USE_VAULT=false \
-    USE_LOCAL=true \
+ENV USE_NGINX_PLUS=true \
+    USE_VAULT=true \
+    USE_LOCAL=false \
     NETWORK=fabric
 
 COPY nginx/ssl /etc/ssl/nginx/
@@ -25,10 +25,7 @@ RUN apt-get update && apt-get install -y \
 	lsb-release \
 	unzip \
 	maven \
-	--no-install-recommends && rm -r /var/lib/apt/lists/*  && \
-# Install vault client
-    wget -q https://releases.hashicorp.com/vault/0.6.0/vault_0.6.0_linux_amd64.zip && \
-    unzip -d /usr/local/bin vault_0.6.0_linux_amd64.zip && \
+	--no-install-recommends && rm -r /var/lib/apt/lists/* && \
     mkdir -p /etc/ssl/nginx
 
 # Install nginx
