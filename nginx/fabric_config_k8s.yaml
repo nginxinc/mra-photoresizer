@@ -1,0 +1,8 @@
+name: resizer
+resolver:
+  host: kube-dns.kube-system.svc.cluster.local
+  ttl: 3s
+external_domain_name: k8s.mra.nginxps.com
+internal_domain_name: svc.cluster.local
+namespace: mra
+root: /usr/share/nginx/html/
