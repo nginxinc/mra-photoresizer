@@ -4,5 +4,5 @@ resolver:
   ttl: 3s
 external_domain_name: k8s.mra.nginxps.com
 internal_domain_name: svc.cluster.local
-namespace: mra
+namespace: nginx-mra
 root: /usr/share/nginx/html/
