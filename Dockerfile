@@ -1,4 +1,4 @@
-FROM openjdk:latest
+FROM openjdk:8-jdk-slim
 
 ENV USE_NGINX_PLUS=true \
     USE_VAULT=true \
@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y \
 	lsb-release \
 	unzip \
 	maven \
+	gnupg \
 	--no-install-recommends && rm -r /var/lib/apt/lists/* && \
     mkdir -p /etc/ssl/nginx
 
