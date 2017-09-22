@@ -1,4 +1,4 @@
-#NGINX Microservices Reference Architecture: PhotoResizer Service
+# NGINX Microservices Reference Architecture: PhotoResizer Service
 
 This repository contains a Java application which is used to resize and upload images for the NGINX _Ingenious_ application. The 
 _Ingenious_ application has been developed by the NGINX Professional Services team to provide a reference 
@@ -11,7 +11,9 @@ Instructions for using the [Router Mesh](https://www.nginx.com/blog/microservice
 
 ## Quick start
 As a single service in the set of services which comprise the NGINX Microservices Reference Architecture application, _Ingenious_,
-the resizer service is not meant to function as a standalone service.
+the resizer service is not meant to function as a standalone service. Once you have built the image, it can be deployed 
+to a container engine along with the other components of the _Ingenious_ application, and then the application will be 
+accessible via your browser. 
 
 There are detailed instructions about the service below, and in order to get started quickly, you can follow these simple 
 instructions to quickly build the image.  
@@ -30,7 +32,7 @@ To build a customized image for different container engines or to set other opti
 
 ## Building a Customized Docker Image
 The Dockerfile for the PhotoResizer service is based on the openjdk:8-jdk-slim image, and installs NGINX open source or NGINX Plus. 
-Note that NGINX Plus includes feature which make discovery of other services possible, include additional load balancing algorithms, 
+Note that NGINX Plus includes features which make discovery of other services possible, include additional load balancing algorithms, 
 create persistent SSL/TLS connections, and provide advanced health check functionality.
 
 Please refer to the comments in the [Dockerfile](Dockerfile "Dockerfile") for details about each command which is
