@@ -76,7 +76,7 @@ public class PhotoResizer {
         AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(),
                 PhotoResizerConfiguration.getSecretKey());
         AmazonS3Client s3Client = new AmazonS3Client(credentials);
-        s3Client.setEndpoint("http://fake-s3.mra.nginxps.com");
+        s3Client.setEndpoint(PhotoResizerConfiguration.getFakeS3URL());
         s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
         transferManager = new TransferManager(s3Client);
@@ -104,7 +104,7 @@ public class PhotoResizer {
             File originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
 
             Download originalDownload = transferManager.download(existingBucketName,
-                    keyBase.replace("/mra-images/", "") + "original.jpg", originalImage);
+                    keyBase.replace("/" + PhotoResizerConfiguration.getS3BucketName() + "/", "") + "original.jpg", originalImage);
 
             if (!originalDownload.isDone()) {
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
