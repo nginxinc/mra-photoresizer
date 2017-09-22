@@ -24,6 +24,9 @@ public class PhotoResizerConfiguration extends Configuration {
     @NotEmpty
     private static final String secretKey = echoEnv.lookup("AWS_SECRET_ACCESS_KEY");
 
+    @NotEmpty
+    private static final String fakeS3URL = echoEnv.lookup("FAKE_S3_URL");
+
     //@NotEmpty
     //private static final String s3Endpoint = "http://fake-s3.mra.nginxps.com";//echoEnv.lookup("S3_ENDPOINT");
 
@@ -89,5 +92,14 @@ public class PhotoResizerConfiguration extends Configuration {
 
     public static Float getCompressionQuality() {
         return COMPRESSION_QUALITY;
+    }
+
+    /**
+     * Getter for fakeS3URL
+     *
+     * @return String
+     */
+    public static String getFakeS3URL() {
+        return fakeS3URL;
     }
 }

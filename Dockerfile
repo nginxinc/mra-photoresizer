@@ -1,8 +1,13 @@
-FROM openjdk:latest
+FROM openjdk:8-jdk-slim
 
 ENV USE_NGINX_PLUS=true \
     USE_VAULT=true \
-    USE_LOCAL=false \
+# CONTAINER_ENGINE specifies the container engine to which the
+# containers will be deployed. Valid values are:
+# - kubernetes
+# - mesos
+# - local
+    CONTAINER_ENGINE=kubernetes \
     NETWORK=fabric
 
 COPY nginx/ssl /etc/ssl/nginx/
@@ -25,6 +30,7 @@ RUN apt-get update && apt-get install -y \
 	lsb-release \
 	unzip \
 	maven \
+	gnupg \
 	--no-install-recommends && rm -r /var/lib/apt/lists/* && \
     mkdir -p /etc/ssl/nginx
 

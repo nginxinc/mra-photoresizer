@@ -5,9 +5,14 @@ chmod +x /usr/local/sbin/generate_config
 
 CONFIG_FILE=/etc/nginx/fabric_config.yaml
 
-if [ "$USE_LOCAL" = true ]; then
-    CONFIG_FILE=/etc/nginx/fabric_config_local.yaml
-fi
+case "$CONTAINER_ENGINE" in
+    kubernetes)
+        CONFIG_FILE=/etc/nginx/fabric_config_k8s.yaml
+        ;;
+    local)
+        CONFIG_FILE=/etc/nginx/fabric_config_local.yaml
+        ;;
+esac
 
 if [ "$USE_VAULT" = true ]; then
 # Install vault client

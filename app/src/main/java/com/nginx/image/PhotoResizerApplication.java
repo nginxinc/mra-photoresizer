@@ -23,7 +23,7 @@ class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
 
     @Override
     public String getName() {
-        return "A simple Photo Resizer Application";
+        return "A simple Photo Resizer Application: FAKE_S3_URL " + PhotoResizerConfiguration.getFakeS3URL();
     }
 
     @Override
