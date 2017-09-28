@@ -10,7 +10,6 @@ ENV USE_NGINX_PLUS=true \
     CONTAINER_ENGINE=kubernetes
 
 COPY nginx/ssl /etc/ssl/nginx/
-COPY vault_env.sh /etc/letsencrypt/
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
