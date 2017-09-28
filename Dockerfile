@@ -7,7 +7,7 @@ ENV USE_NGINX_PLUS=true \
 # - kubernetes
 # - mesos (default)
 # - local
-#    CONTAINER_ENGINE=kubernetes
+    CONTAINER_ENGINE=kubernetes
 
 COPY nginx/ssl /etc/ssl/nginx/
 COPY vault_env.sh /etc/letsencrypt/
