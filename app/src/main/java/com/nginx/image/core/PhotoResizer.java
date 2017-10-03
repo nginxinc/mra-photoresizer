@@ -137,7 +137,7 @@ public class PhotoResizer {
                     String keyName = keyBase + size + ".jpg";
                     LOGGER.info("Mid App: keyname " + keyName + classInstance);
                     s3FileUpload(imageFilesMap.get(size),keyName);
-                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
+                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + ":" + jpgURL.getPort() + keyName;
                     imagesURLMap.put(size + "_url",uploadedURL);
                     imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
                     imagesURLMap.put(size + "_width", String.valueOf(imageData.width));

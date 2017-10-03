@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim
+FROM openjdk:8-jdk
 
 ENV USE_NGINX_PLUS=true \
     USE_VAULT=false \
