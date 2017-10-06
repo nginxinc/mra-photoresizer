@@ -1,5 +1,6 @@
 FROM openjdk:8-jdk
 
+ARG CONTAINER_ENGINE
 ENV USE_NGINX_PLUS=true \
     USE_VAULT=false \
 # CONTAINER_ENGINE specifies the container engine to which the
@@ -7,7 +8,7 @@ ENV USE_NGINX_PLUS=true \
 # - kubernetes
 # - mesos (default)
 # - local
-    CONTAINER_ENGINE=kubernetes
+    CONTAINER_ENGINE=${CONTAINER_ENGINE:-kubernetes}
 
 COPY nginx/ssl /etc/ssl/nginx/
 #Install Required packages for installing NGINX Plus
