@@ -137,7 +137,7 @@ public class PhotoResizer {
                     String keyName = keyBase + size + ".jpg";
                     LOGGER.info("Mid App: keyname " + keyName + classInstance);
                     s3FileUpload(imageFilesMap.get(size),keyName);
-                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + keyName;
+                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
                     imagesURLMap.put(size + "_url",uploadedURL);
                     imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
                     imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
@@ -162,6 +162,30 @@ public class PhotoResizer {
         resizedImagesMapAsJSON = makeJson(imagesURLMap);
         LOGGER.info("End App: JSON " + resizedImagesMapAsJSON + classInstance);
         return resizedImagesMapAsJSON;
+    }
+
+    /**
+     * Takes a URL and returns a String in the format ":<port-number>" when the port is
+     * not equal to -1, 80, and 443.
+     *
+     * When the port is not set, {@link java.net.URL#getPort()} returns -1. It's probably
+     * not necessary to check for ports 80 and 443 since they are the defaults for the
+     * http and https schemes.
+     *
+     * There is no validation on the value of the port to ensure that it conforms to expected
+     * values. Examples are greater than 0 and not a reserved port
+     *
+     * @param url an instance of {@link java.net.URL}
+     * @return a String
+     */
+    private String extractPort(URL url) {
+        String ret = "";
+
+        if (url.getPort() != -1 && url.getPort() != 80 && url.getPort() != 443) {
+            ret = ":" + Integer.toString(url.getPort());
+        }
+
+        return ret;
     }
 
     private String makeJson(ConcurrentHashMap<String,String> imagesURLMap) {
