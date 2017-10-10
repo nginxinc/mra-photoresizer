@@ -5,6 +5,10 @@ chmod +x /usr/local/sbin/generate_config
 
 CONFIG_FILE=/etc/nginx/fabric_config.yaml
 
+echo -e "\033[32m -----"
+echo -e "\033[32m Building for ${CONTAINER_ENGINE}"
+echo -e "\033[32m -----\033[0m"
+
 case "$CONTAINER_ENGINE" in
     kubernetes)
         CONFIG_FILE=/etc/nginx/fabric_config_k8s.yaml

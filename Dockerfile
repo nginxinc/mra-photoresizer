@@ -1,17 +1,16 @@
-FROM openjdk:8-jdk-slim
+FROM openjdk:8-jdk
 
+ARG CONTAINER_ENGINE
 ENV USE_NGINX_PLUS=true \
-    USE_VAULT=true \
+    USE_VAULT=false \
 # CONTAINER_ENGINE specifies the container engine to which the
 # containers will be deployed. Valid values are:
 # - kubernetes
-# - mesos
+# - mesos (default)
 # - local
-    CONTAINER_ENGINE=kubernetes \
-    NETWORK=fabric
+    CONTAINER_ENGINE=${CONTAINER_ENGINE:-kubernetes}
 
 COPY nginx/ssl /etc/ssl/nginx/
-COPY vault_env.sh /etc/letsencrypt/
 #Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
 	jq \
@@ -40,8 +39,8 @@ COPY ./nginx /etc/nginx/
 RUN /usr/local/bin/install-nginx.sh
 
 # forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
-	ln -sf /dev/stderr /var/log/nginx/error.log && \
+RUN ln -sf /dev/stdout /var/log/nginx/access_log && \
+	ln -sf /dev/stderr /var/log/nginx/error_log && \
 	chown -R nginx /var/log/nginx/
 
 #COPY app/start.sh app/PhotoResizer.yaml /app/
