@@ -148,3 +148,9 @@ In order to run the image, some environment variables must be set so that they a
 | REDIS_CACHE_PORT | The Redis server port | "6379" |
 | REDIS_CACHE_URL | The Redis server host name | "redis.local" |
 | S3_BUCKET | The name of the S3 bucket | my-s3 |
+
+
+#### \*Disclaimer\*
+
+
+In this service, the `nginx/ssl/dhparam.pem` file is provided for ease of setup. In production environments, it is highly recommended for secure key-exchange to replace this file with your own generated DH parameter.
