@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.sanselan.ImageReadException;
 import org.apache.sanselan.ImageWriteException;
 import org.apache.sanselan.Sanselan;
-import org.apache.sanselan.common.IImageMetadata;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.jpeg.exifRewrite.ExifRewriter;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
@@ -19,17 +18,32 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- //  ExifManager.java
- //  PhotoResizer
- //
- //  Copyright © 2017 NGINX Inc. All rights reserved.
+ * ExifManager.java
+ * PhotoResizer
+ *
+ * The ExifManager class uses the sanselan library to manage the exchangeable
+ * image file information when resizing images
+ *
+ * Copyright © 2017 NGINX Inc. All rights reserved.
  */
-
 class ExifManager {
+
+    // instantiate a logger
     private static final Logger logger = Logger.getLogger("com.nginx.image");
 
-    static void copyExifData (File sourceFile, File destFile, List<TagInfo> excludedFields,
+    /**
+     * Static method which copies image data from one {@link File} to another
+     *
+     * @param sourceFile the file to copy from
+     * @param destFile the file to copy to
+     * @param excludedFields a list of {@link TagInfo} objects to exclude from being copied
+     * @param updatedFields a {@link HashMap} of fields which should be updated in the
+     *                      destination file
+     */
+    static void copyExifData(File sourceFile, File destFile, List<TagInfo> excludedFields,
                              HashMap<TagInfo, Integer> updatedFields) {
+
+        // instantiate variables
         String tempFileName = destFile.getAbsolutePath() + ".tmp";
         File tempFile = null;
         OutputStream tempStream = null;
@@ -37,10 +51,13 @@ class ExifManager {
         try {
             tempFile = new File (tempFileName);
 
-            TiffOutputSet sourceSet = getSanselanOutputSet(sourceFile, TiffConstants.DEFAULT_TIFF_BYTE_ORDER);
-            TiffOutputSet destSet = getSanselanOutputSet(destFile, sourceSet.byteOrder);
+            TiffOutputSet sourceSet =
+                    getSanselanOutputSet(sourceFile, TiffConstants.DEFAULT_TIFF_BYTE_ORDER);
 
-            // If the EXIF data endianess of the source and destination files
+            TiffOutputSet destSet =
+                    getSanselanOutputSet(destFile, sourceSet.byteOrder);
+
+            // If the EXIF data endianness of the source and destination files
             // differ then fail. This only happens if the source and
             // destination images were created on different devices. It's
             // technically possible to copy this data by changing the byte
@@ -120,15 +137,25 @@ class ExifManager {
         }
     }
 
+    /**
+     * Gets the Sanselan output set from the file using the specified byte order
+     *
+     * @param jpegImageFile the image from which to extract the Sanselan output
+     * @param defaultByteOrder the byte order
+     * @return a {@link TiffOutputSet} object
+     *
+     * @throws IOException thrown from {@link Sanselan#getMetadata(File)}
+     * @throws ImageReadException thrown from {@link Sanselan#getMetadata(File)}
+     * @throws ImageWriteException thrown from {@link Sanselan#getMetadata(File)}
+     */
     private static TiffOutputSet getSanselanOutputSet(File jpegImageFile, int defaultByteOrder)
             throws IOException, ImageReadException, ImageWriteException {
         TiffImageMetadata exif = null;
         TiffOutputSet outputSet = null;
 
-        IImageMetadata metadata = Sanselan.getMetadata(jpegImageFile);
-        JpegImageMetadata jpegMetadata = (JpegImageMetadata) metadata;
-        if (jpegMetadata != null) {
-            exif = jpegMetadata.getExif();
+        JpegImageMetadata metadata = (JpegImageMetadata) Sanselan.getMetadata(jpegImageFile);
+        if (metadata != null) {
+            exif = metadata.getExif();
 
             if (exif != null) {
                 outputSet = exif.getOutputSet();
@@ -145,6 +172,14 @@ class ExifManager {
         return outputSet;
     }
 
+    /**
+     * Checks whether a {@link TiffOutputDirectory} exists for the {@link TiffOutputSet}, if so that
+     * directory is returned. If not, a new one is created.
+     *
+     * @param outputSet the {@link TiffOutputSet} to check for the directory
+     * @param outputDirectory the {@link TiffOutputDirectory} to check for
+     * @return a {@link TiffOutputDirectory}
+     */
     private static TiffOutputDirectory getOrCreateExifDirectory(TiffOutputSet outputSet, TiffOutputDirectory outputDirectory) {
         TiffOutputDirectory result = outputSet.findDirectory(outputDirectory.type);
         if (result != null) {
