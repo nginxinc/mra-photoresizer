@@ -400,7 +400,7 @@ public class PhotoResizer {
      * @param image the image to transform
      * @param transform the {@link AffineTransform} object
      *
-     * @return a {@link BufferedImage} object 
+     * @return a {@link BufferedImage} object
      */
     private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) {
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);

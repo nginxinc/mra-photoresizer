@@ -136,7 +136,7 @@ Replace _&lt;your-image-repo-name&gt;_ and execute the command below to build th
 docker build . -t <your-image-repo-name>/photoresizer:<tag>
 ```
 
-### Runtime environment variables
+### 5. Runtime environment variables
 In order to run the image, some environment variables must be set so that they are available during runtime.
 
 | Variable Name | Description | Example Value |
