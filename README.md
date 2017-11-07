@@ -136,7 +136,7 @@ Replace _&lt;your-image-repo-name&gt;_ and execute the command below to build th
 docker build . -t <your-image-repo-name>/photoresizer:<tag>
 ```
 
-### Runtime environment variables
+### 5. Runtime environment variables
 In order to run the image, some environment variables must be set so that they are available during runtime.
 
 | Variable Name | Description | Example Value |
@@ -144,11 +144,15 @@ In order to run the image, some environment variables must be set so that they a
 | AWS_ACCESS_KEY_ID | Your AWS Key for S3 | ABCD1234ABCD1234ABCD1234 |
 | AWS_REGION | The region where your S3 instance is running | us-west-1 |
 | AWS_SECRET_ACCESS_KEY | Your AWS Secret Access Key | ABCD1234ABCD1234ABCD1234 |
-| FAKE_S3_URL | The URL for the S3 host | "http://fake-s3.local" |
+| S3_URL | The URL for the S3 host | "http://fake-s3.local" |
 | REDIS_CACHE_PORT | The Redis server port | "6379" |
 | REDIS_CACHE_URL | The Redis server host name | "redis.local" |
 | S3_BUCKET | The name of the S3 bucket | my-s3 |
 
+### 6. Service Endpoints
+| Method | Endpoint | Description | Parameters |
+| ------------- | ------------- | ----------- | ----------- |
+| POST | /v1/resizer | Resize the image specified in the URL form input | url |
 
 #### \*Disclaimer\*
 

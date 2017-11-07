@@ -10,7 +10,6 @@ import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.nginx.image.PhotoResizerConfiguration;
 import org.apache.sanselan.Sanselan;
@@ -47,64 +46,95 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.lang.Math.round;
 
 /**
- //  PhotoResizer.java
- //  PhotoResizer
- //
- //  Copyright © 2017 NGINX Inc. All rights reserved.
+ * PhotoResizer.java
+ * PhotoResizer
+ *
+ * Class that does the work of resizing and uploading an image
+ *
+ * Copyright © 2017 NGINX Inc. All rights reserved.
  */
-
-
 public class PhotoResizer {
-//    private BufferedImage originalBuffImage;
-//    private File originalImage;
-//    private int orientation;
-//    private int width = 0;
-//    private int height = 0;
-    private final static String LARGE = PhotoResizerConfiguration.getLARGE();
-    private final static String MEDIUM = PhotoResizerConfiguration.getMEDIUM();
-    private final static String THUMB = PhotoResizerConfiguration.getTHUMB();
-    private final static ImmutableMap<String, Integer> sizesMap = PhotoResizerConfiguration.getSizesMap();
-    private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
+
+    // The logger for this instance of the service
     private static final Logger LOGGER = LoggerFactory.getLogger(PhotoResizer.class);
-    private int s3ReAttempts = 0;
+
+    // The string to use when displaying the class instance
+    private final String classInstance = " class instance = " + System.identityHashCode(this);
+
+    // The compression quality to use when resizing images
+    private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
+
+    // The bucket name to use when storing the images
+    private final String existingBucketName = PhotoResizerConfiguration.getS3BucketName();
+
+    // The TransferManager object used to upload and download images
     private final TransferManager transferManager;
-    private final String existingBucketName;
-    private String classInstance;
 
 
+    private int s3ReAttempts = 0;
+
+    /**
+     * Default no-arg constructor
+     *
+     * Initializes the {@link AmazonS3Client} using {@link AWSCredentials} generated from the
+     * environment variables set in the {@link PhotoResizerConfiguration}
+     */
     public PhotoResizer() {
-        AWSCredentials credentials = new BasicAWSCredentials(PhotoResizerConfiguration.getAccessKey(),
+
+        // create the AWSCredentials
+        AWSCredentials credentials = new BasicAWSCredentials(
+                PhotoResizerConfiguration.getAccessKey(),
                 PhotoResizerConfiguration.getSecretKey());
+
+        // create and configure the AmazonS3Client using the AWSCredentials
         AmazonS3Client s3Client = new AmazonS3Client(credentials);
-        s3Client.setEndpoint(PhotoResizerConfiguration.getFakeS3URL());
+        s3Client.setEndpoint(PhotoResizerConfiguration.getS3URL());
         s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
 
+        // instantiate the transferManager using the AmazonS3Client
         transferManager = new TransferManager(s3Client);
-        existingBucketName = PhotoResizerConfiguration.getS3BucketName();
-
     }
 
+    /**
+     * Work method which downloads and begins the process of resizing the image specified
+     * in the imageURL parameter. The actual resizing is done in the {@link #resize(File, int, int, BufferedImage)}
+     * method
+     *
+     * @param imageURL a String indicating the location of the original image to resize
+     *
+     * @return a JSON String which represents a map of the resized image locations
+     */
     public String resizeImage(String imageURL) {
-        this.classInstance = " + class instance = " + System.identityHashCode(this);
+
         LOGGER.info("Start App: URL " + imageURL + classInstance);
 
+        // initialize return value
         String resizedImagesMapAsJSON;
-        ConcurrentHashMap<String,File> imageFilesMap;
-        imageFilesMap = new ConcurrentHashMap<>();
-        ConcurrentHashMap<String,String> imagesURLMap;
-        imagesURLMap = new ConcurrentHashMap<>();
+
+        // create maps to store the resized images and their URLs
+        ConcurrentHashMap<String,File> imageFilesMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String,String> imagesURLMap = new ConcurrentHashMap<>();
 
         try {
+
+            // parse a URL from the imageURL parameter
             URL jpgURL = new URL(imageURL);
-            final String keyBase = jpgURL.getPath().replaceAll("original.*$","");
-            LOGGER.info("Start Try: Keybase and URL: " + keyBase + " : " + imageURL + classInstance);
+
+            // create the baseImagePath by removing the file name from the jpgURL
+            // http://s3.amazonaws.com/bucket-name/path/original.jpg becomes
+            // http://s3.amazonaws.com/bucket-name/path/
+            final String baseImagePath = jpgURL.getPath().replaceAll("original.*$","");
+
+            LOGGER.info("Start Try: Keybase and URL: " + baseImagePath + ": " + imageURL + classInstance);
+
             // We need to use files because the Sanselan EXIF libraries expect it
             File repository = Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
-            File originalImage = File.createTempFile(LARGE + "_", ".jpg", repository);
+            File originalImage = File.createTempFile(PhotoResizerConfiguration.LARGE + "_", ".jpg", repository);
 
+            // http://s3.amazonaws.com/path/original.jpg
             Download originalDownload = transferManager.download(existingBucketName,
-                    keyBase.replace("/" + PhotoResizerConfiguration.getS3BucketName() + "/", "") + "original.jpg", originalImage);
+                    baseImagePath.replace("/" + existingBucketName + "/", "") + "original.jpg", originalImage);
 
             if (!originalDownload.isDone()) {
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
@@ -114,29 +144,37 @@ public class PhotoResizer {
 
             // Transfers also allow you to set a ProgressListener to receive
             // asynchronous notifications about your transfer's progress.
-
             originalDownload.waitForCompletion();
             if(originalDownload.isDone()) {
+
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
                 LOGGER.info("Download complete.");
+
+                // read the downloaded image in to a BufferedImage and get the dimensions
                 BufferedImage originalBuffImage = ImageIO.read(originalImage);
                 int width = originalBuffImage.getWidth(null);
                 int height = originalBuffImage.getHeight(null);
                 LOGGER.info("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
-                this.transformOriginalImage(width, height, originalImage, originalBuffImage); // This makes sure the originalImage is oriented correctly
+                // This makes sure the originalImage is oriented correctly
+                this.transformOriginalImage(width, height, originalImage, originalBuffImage);
 
-                imageFilesMap.put(LARGE, originalImage);
-                imageFilesMap.put(MEDIUM, File.createTempFile(MEDIUM + "_", ".jpg", repository));
-                imageFilesMap.put(THUMB, File.createTempFile(THUMB + "_", ".jpg", repository));
+                // store the images and the images in the imagesFileMap
+                imageFilesMap.put(PhotoResizerConfiguration.LARGE, originalImage);
+                imageFilesMap.put(PhotoResizerConfiguration.MEDIUM,
+                        File.createTempFile(PhotoResizerConfiguration.MEDIUM + "_", ".jpg", repository));
+                imageFilesMap.put(PhotoResizerConfiguration.THUMB,
+                        File.createTempFile(PhotoResizerConfiguration.THUMB + "_", ".jpg", repository));
 
                 // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
                 imageFilesMap.forEach(1, (size, imageFile) -> {
-                    ImageInformation imageData = resize(imageFile,sizesMap.get(size), originalBuffImage);
+                    ImageInformation imageData = resize(imageFile, PhotoResizerConfiguration.SIZES_MAP.get(size), originalBuffImage);
 
-                    String keyName = keyBase + size + ".jpg";
+                    String keyName = baseImagePath + size + ".jpg";
                     LOGGER.info("Mid App: keyname " + keyName + classInstance);
-                    s3FileUpload(imageFilesMap.get(size),keyName);
+
+                    // upload the file. TODO: this should call the uploader service
+                    s3FileUpload(imageFilesMap.get(size), keyName);
                     String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
                     imagesURLMap.put(size + "_url",uploadedURL);
                     imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
@@ -188,6 +226,15 @@ public class PhotoResizer {
         return ret;
     }
 
+    /**
+     * Helper method which calls {@link ObjectMapper#writeValueAsString(Object)} to print
+     * the image URLs to a JSON String
+     *
+     * @param imagesURLMap the {@link ConcurrentHashMap} which contains the URLs to
+     *                     transform to JSON
+     *
+     * @return a JSON String
+     */
     private String makeJson(ConcurrentHashMap<String,String> imagesURLMap) {
         /*
          * Map will contain
@@ -204,22 +251,38 @@ public class PhotoResizer {
         return imagesMapAsJSON;
     }
 
+    /**
+     * Helper method which resizes an image
+     *
+     * @param resizedImageFile The file to store the image
+     * @param maxSize the maximum size of the image to use when creating the scaling dimensions
+     * @param originalBuffImage The image to resize
+     *
+     * @return an {@link ImageInformation} object
+     */
     private ImageInformation resize(File resizedImageFile, int maxSize, BufferedImage originalBuffImage) {
         ImageInformation imageData = new ImageInformation(1,0,0);
         try {
+
             double scale;
+
+            // maxSize == -1 means that the original size should be used
             if(maxSize == -1) {
                 imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
                 return imageData;
-            }
-            else if (originalBuffImage.getWidth() > originalBuffImage.getHeight()) { //sizes[0] is width, [1] is HEIGHT
+            } else if (originalBuffImage.getWidth() > originalBuffImage.getHeight()) {
+                // if the image is wider than it is tall, then scale base on width
                 scale = (double) maxSize/originalBuffImage.getWidth();
-            }
-            else {
+            } else {
+                // if the image is taller than it is wide, then scale base on height
                 scale = (double) maxSize/originalBuffImage.getHeight();
             }
+
+            // get the scaling dimensions
             int widthScale = (int) round(scale * originalBuffImage.getWidth());
             int heightScale = (int) round(scale * originalBuffImage.getHeight());
+
+            // call secondary resize method
             return this.resize(resizedImageFile, widthScale, heightScale, originalBuffImage);
         } catch (Exception e) {
             LOGGER.error("Caught exception during resize for file " + resizedImageFile +
@@ -228,8 +291,21 @@ public class PhotoResizer {
         return imageData;
     }
 
+    /**
+     * Helper method which resizes an image using specific height and width parameters
+     *
+     * @param resizedImageFile the location to store the image
+     * @param width the width of the image to resize
+     * @param height the height of the image to resize
+     * @param originalBuffImage the BufferedImage object which was downloaded in {@link #resizeImage(String)}
+     *
+     * @return an {@link ImageInformation} object containing the resized image
+     */
     private ImageInformation resize(File resizedImageFile, int width, int height, BufferedImage originalBuffImage) {
+
+        // initialize the return value
         BufferedImage resizedBuffImage;
+
         try {
             resizedBuffImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
             Image tmp = originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
@@ -244,12 +320,21 @@ public class PhotoResizer {
         return new ImageInformation(1, width, height);
     }
 
+    /**
+     * This method writes a JPG file to the file system
+     *
+     * @param fileHandle the name of the file
+     * @param resizedImage the resized image to write
+     * @param compressionQuality the compression quality to use when saving the image
+     */
     private void writeJpg(File fileHandle, BufferedImage resizedImage, float compressionQuality) {
+
+        // instantiate ImageWriter and JPEGImageWriteParam instances
         Iterator writers = ImageIO.getImageWritersByFormatName("jpg");
         ImageWriter resizeWriter = (ImageWriter)writers.next();
-
         JPEGImageWriteParam params = new JPEGImageWriteParam(null);
 
+        // configure the JPEGImageWriteParams
         params.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
         params.setCompressionQuality(compressionQuality);
         params.setProgressiveMode(ImageWriteParam.MODE_DISABLED);
@@ -280,6 +365,14 @@ public class PhotoResizer {
         }
     }
 
+    /**
+     * Method which takes an image file and calls {@link #transformImage}
+     *
+     * @param width the width to use in the transformation
+     * @param height the height to use in the transformation
+     * @param originalImage the image to transform
+     * @param originalBuffImage the buffered image
+     */
     private void transformOriginalImage(int width, int height, File originalImage, BufferedImage originalBuffImage) {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
@@ -301,6 +394,14 @@ public class PhotoResizer {
         }
     }
 
+    /**
+     * Transforms an image using {@link AffineTransformOp} and {@link Graphics2D}
+     *
+     * @param image the image to transform
+     * @param transform the {@link AffineTransform} object
+     *
+     * @return a {@link BufferedImage} object
+     */
     private static BufferedImage transformImage(BufferedImage image, AffineTransform transform) {
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
 
@@ -312,22 +413,14 @@ public class PhotoResizer {
         return destinationImage;
     }
 
-    public static class ImageInformation { // Inner class
-        final int orientation;
-        final int width;
-        final int height;
-
-        ImageInformation(int orientation, int width, int height) {
-            this.orientation = orientation;
-            this.width = width;
-            this.height = height;
-        }
-
-        public String toString() {
-            return String.format("%dx%d,%d", this.width, this.height, this.orientation);
-        }
-    }
-
+    /**
+     * Static method that creates and returns a new {@link AffineTransform} object based on
+     * the info param
+     *
+     * @param info an {@link ImageInformation} object
+     *
+     * @return an {@link AffineTransform} object
+     */
     private static AffineTransform getExifTransformation(ImageInformation info) {
         AffineTransform t = new AffineTransform();
 
@@ -368,14 +461,29 @@ public class PhotoResizer {
         return t;
     }
 
+    /**
+     * Uploads a file to S3 using the {@link AmazonS3Client}. In the event of upload
+     * failure, this method will be called recursively as many times as is specified in the
+     * the s3ReAttempts variable
+     *
+     * TODO: This should make a call to the uploader service to separate functionality
+     *
+     * @param fileToUpload the file which will be uploaded
+     * @param keyName the file URL
+     *
+     * @return boolean: true if the file was uploaded, false otherwise
+     */
     private boolean s3FileUpload(File fileToUpload,String keyName) {
-
 
         try {
             // TransferManager processes all transfers asynchronously, so this call will return immediately.
-            keyName = keyName.replaceFirst("^/" + existingBucketName,""); // Sometimes the URL's come in with the bucketname to start with
-            keyName = keyName.replaceFirst("^/", ""); // This is because the original key should not have a starting slash
+            // Sometimes the URL's come in with the bucketname to start with
+
+            keyName = keyName.replaceFirst("^/" + existingBucketName,"");
+            // This is because the original key should not have a starting slash
+            keyName = keyName.replaceFirst("^/", "");
             Upload upload = transferManager.upload(existingBucketName, keyName, fileToUpload);
+
             // You can poll your transfer's status to check its progress
             if (!upload.isDone()) {
                 LOGGER.info("Transfer: " + upload.getDescription());
@@ -385,33 +493,65 @@ public class PhotoResizer {
 
             // Transfers also allow you to set a ProgressListener to receive
             // asynchronous notifications about your transfer's progress.
-
             upload.waitForCompletion();
             if(upload.isDone()) {
                 LOGGER.info("Transfer: " + upload.getDescription());
                 LOGGER.info("Upload complete.");
             }
-        }
-        catch (AmazonClientException amazonClientException) {
-            boolean madeIt = false;
+        } catch (AmazonClientException amazonClientException) {
+            boolean uploaded = false;
             if (s3ReAttempts < 3) {
                 s3ReAttempts++;
                 LOGGER.error("Struggling to upload file: Attempt" + s3ReAttempts);
-                madeIt = s3FileUpload(fileToUpload, keyName);
+                uploaded = s3FileUpload(fileToUpload, keyName);
             }
+
             LOGGER.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
             amazonClientException.printStackTrace();
-            return madeIt;
+            return uploaded;
         }
         catch (InterruptedException e) {
             LOGGER.error("Unable to upload file, upload was aborted:", e);
             e.printStackTrace();
             return false;
-        } finally {
-            // After the upload is complete, call shutdownNow to release the resources.
-//            transferManager.shutdownNow();
         }
         return true;
+    }
+
+    /**
+     * Inner class used to store metadata about an image:
+     * - orientation
+     * - width
+     * - height
+     *
+     */
+    public static class ImageInformation {
+        final int orientation;
+        final int width;
+        final int height;
+
+        /**
+         * Constructor
+         *
+         * @param orientation the orientation as an int
+         * @param width the width as an int
+         * @param height the height as an int
+         */
+        ImageInformation(int orientation, int width, int height) {
+            this.orientation = orientation;
+            this.width = width;
+            this.height = height;
+        }
+
+        /**
+         * Overrides the {@link Object#toString()}
+         *
+         * @return the class properties as a String
+         */
+        @Override
+        public String toString() {
+            return String.format("%dx%d,%d", this.width, this.height, this.orientation);
+        }
     }
 }
 
