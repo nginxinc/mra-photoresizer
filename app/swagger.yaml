@@ -1,0 +1,23 @@
+swagger: "2.0"
+info:
+  description: "MRA Resizer API"
+  version: "1.0.0"
+  title: "MRA Resizer API"
+  contact:
+    name: "NGINX Professional Services"
+    email: "professionalservices@nginx.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+paths:
+  /v1/image:
+    summary: "Endpoint for resizing an image"
+    post:
+      responses:
+        200:
+          description: "Image resizing complete. Check JSON response for errors."
+      parameters:
+      - in: "body"
+        name: "url"
+        description: "Form data which consists of an URL of the image to be resized"
+        required: true
