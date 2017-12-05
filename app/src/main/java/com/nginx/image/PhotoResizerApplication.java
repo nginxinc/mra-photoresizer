@@ -18,7 +18,7 @@ import io.dropwizard.setup.Environment;
  *
  *  Copyright © 2017 NGINX Inc. All rights reserved.
  */
-class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
+public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
 
     /**
      * The main method that is called by the java executable
@@ -42,7 +42,7 @@ class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
      */
     @Override
     public String getName() {
-        return "A simple Photo Resizer Application: S3_URL " + PhotoResizerConfiguration.getS3URL();
+        return "A simple Photo Resizer Application";
     }
 
     /**
@@ -69,8 +69,8 @@ class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
      *
      * Instantiates and registers health checks for the environment
      *
-     * @param configuration
-     * @param environment
+     * @param configuration the PhotoResizerConfiguration object
+     * @param environment the Environment object
      */
     @Override
     public void run(final PhotoResizerConfiguration configuration,
@@ -81,6 +81,6 @@ class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
         environment.healthChecks().register("memory", new MemoryHealthCheck());
 
         // register the PhotoResizerResource class 
-        environment.jersey().register(new PhotoResizerResource());
+        environment.jersey().register(new PhotoResizerResource(configuration.getS3Client().build(environment)));
     }
 }
