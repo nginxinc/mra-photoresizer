@@ -1,12 +1,16 @@
 package com.nginx.image.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nginx.image.PhotoResizerApplication;
 import com.nginx.image.PhotoResizerConfiguration;
 import com.nginx.image.net.S3Client;
 import com.nginx.image.resources.MockDownload;
+import com.nginx.image.util.ImageSizeEnum;
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -71,12 +75,50 @@ public class PhotoResizerTest  {
             FileUtils.copyFile(resourceFile, (File)args[1]);
             return new MockDownload();
         }).when(mockS3).download(anyString(), any(File.class));
+
         when(mockS3.fileUpload(any(), anyString())).thenReturn(Boolean.TRUE);
 
         PhotoResizer resizer = new PhotoResizer(mockS3);
-        resizer.resizeImage(MOCK_PATH);
+        String resizeJSONString = resizer.resizeImage(MOCK_PATH);
 
-        // need to assert on the return value
+        assertTrue(StringUtils.isNotBlank(resizeJSONString));
+
+        JsonNode resizeJSON = new ObjectMapper().readTree(resizeJSONString);
+
+        /*
+         * Valid response String will look like the following:
+         * {
+         *  "thumb_url":"https://placeholder/thumb.jpg",
+         *  "large_width":"512",
+         *  "thumb_width":"120",
+         *  "medium_height":"640",
+         *  "thumb_height": "120",
+         *  "medium_width":"640",
+         *  "medium_url":"https://placeholder/,medium.jpg",
+         *  "large_url":"https://placeholder/large.jpg",
+         *  "large_height":"512"}
+         */
+
+        JsonNode imageNode;
+        for(ImageSizeEnum imageSize : ImageSizeEnum.values()) {
+            // check with the sizes
+            imageNode = resizeJSON.get(imageSize.getSizeName() + "_width");
+            assertNotNull("There is no element for " + imageSize.getSizeName() + "_width",
+                    imageNode);
+            assertTrue("The width value is less than 0", imageNode.asInt() > 0);
+            imageNode = resizeJSON.get(imageSize.getSizeName() + "_height");
+            assertNotNull("There is no element for " + imageSize.getSizeName() + "_height",
+                    imageNode);
+            assertTrue("The height value is less than 0", imageNode.asInt() > 0);
+
+            // check the url
+            imageNode = resizeJSON.get(imageSize.getSizeName() + "_url");
+            assertNotNull("There is no element for " + imageSize.getSizeName() + "_url",
+                    imageNode);
+            assertTrue("The url: " + imageNode.asText() + " does not contain " +
+                    imageSize.getSizeName() + ".jpg", StringUtils.contains(imageNode.asText(),
+                    imageSize.getSizeName() + ".jpg"));
+        }
     }
 
     /**

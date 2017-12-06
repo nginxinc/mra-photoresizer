@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public enum ImageSizeEnum {
     LARGE(-1, "large"),
-    MEDIUM(640, ",medium"),
+    MEDIUM(640, "medium"),
     THUMB(120, "thumb");
 
     private final Integer pixelSize;
