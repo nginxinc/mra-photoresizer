@@ -1,6 +1,6 @@
 FROM openjdk:8-jdk
 
-ARG CONTAINER_ENGINE
+ARG CONTAINER_ENGINE_ARG
 ENV USE_NGINX_PLUS=true \
     USE_VAULT=false \
 # CONTAINER_ENGINE specifies the container engine to which the
@@ -8,7 +8,7 @@ ENV USE_NGINX_PLUS=true \
 # - kubernetes
 # - mesos (default)
 # - local
-    CONTAINER_ENGINE=${CONTAINER_ENGINE:-kubernetes}
+    CONTAINER_ENGINE=${CONTAINER_ENGINE_ARG:-kubernetes}
 
 COPY nginx/ssl /etc/ssl/nginx/
 #Install Required packages for installing NGINX Plus
@@ -49,7 +49,9 @@ WORKDIR /build
 RUN mvn clean install && \
 #    mvn package && \
 #    cp target/PhotoResizer-1.0.1-SNAPSHOT.jar /app && \
-    rm -r target/apidocs target/classes target/dependency-maven-plugin-markers target/generated-sources target/generated-test-sources target/javadoc-bundle-options target/maven-archiver target/maven-status target/surefire-reports target/test-classes
+    rm -r target/apidocs target/classes target/dependency-maven-plugin-markers \
+    target/generated-sources target/generated-test-sources target/javadoc-bundle-options \
+    target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 COPY ./status.html /usr/share/nginx/html/status.html
 
 #WORKDIR /app
