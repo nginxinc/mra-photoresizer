@@ -1,17 +1,15 @@
 package com.nginx.image.core;
 
-import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.transfer.Download;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.Upload;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Files;
 import com.nginx.image.PhotoResizerConfiguration;
+import com.nginx.image.net.S3Client;
+import com.nginx.image.util.ImageSizeEnum;
+import com.nginx.image.util.ResizerException;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
@@ -64,14 +62,7 @@ public class PhotoResizer {
     // The compression quality to use when resizing images
     private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
 
-    // The bucket name to use when storing the images
-    private final String existingBucketName = PhotoResizerConfiguration.getS3BucketName();
-
-    // The TransferManager object used to upload and download images
-    private final TransferManager transferManager;
-
-
-    private int s3ReAttempts = 0;
+    private final S3Client s3Client;
 
     /**
      * Default no-arg constructor
@@ -79,20 +70,8 @@ public class PhotoResizer {
      * Initializes the {@link AmazonS3Client} using {@link AWSCredentials} generated from the
      * environment variables set in the {@link PhotoResizerConfiguration}
      */
-    public PhotoResizer() {
-
-        // create the AWSCredentials
-        AWSCredentials credentials = new BasicAWSCredentials(
-                PhotoResizerConfiguration.getAccessKey(),
-                PhotoResizerConfiguration.getSecretKey());
-
-        // create and configure the AmazonS3Client using the AWSCredentials
-        AmazonS3Client s3Client = new AmazonS3Client(credentials);
-        s3Client.setEndpoint(PhotoResizerConfiguration.getS3URL());
-        s3Client.setS3ClientOptions(new S3ClientOptions().withPathStyleAccess(true));
-
-        // instantiate the transferManager using the AmazonS3Client
-        transferManager = new TransferManager(s3Client);
+    public PhotoResizer(S3Client s3Client) {
+        this.s3Client = s3Client;
     }
 
     /**
@@ -104,7 +83,7 @@ public class PhotoResizer {
      *
      * @return a JSON String which represents a map of the resized image locations
      */
-    public String resizeImage(String imageURL) {
+    public String resizeImage(String imageURL) throws ResizerException {
 
         LOGGER.info("Start App: URL " + imageURL + classInstance);
 
@@ -112,7 +91,7 @@ public class PhotoResizer {
         String resizedImagesMapAsJSON;
 
         // create maps to store the resized images and their URLs
-        ConcurrentHashMap<String,File> imageFilesMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<ImageSizeEnum,File> imageFilesMap = new ConcurrentHashMap<>();
         ConcurrentHashMap<String,String> imagesURLMap = new ConcurrentHashMap<>();
 
         try {
@@ -130,11 +109,10 @@ public class PhotoResizer {
             // We need to use files because the Sanselan EXIF libraries expect it
             File repository = Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
-            File originalImage = File.createTempFile(PhotoResizerConfiguration.LARGE + "_", ".jpg", repository);
+            File originalImage = File.createTempFile(ImageSizeEnum.LARGE.getSizeName() + "_", ".jpg", repository);
 
             // http://s3.amazonaws.com/path/original.jpg
-            Download originalDownload = transferManager.download(existingBucketName,
-                    baseImagePath.replace("/" + existingBucketName + "/", "") + "original.jpg", originalImage);
+            Download originalDownload = s3Client.download(baseImagePath, originalImage);
 
             if (!originalDownload.isDone()) {
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
@@ -148,51 +126,57 @@ public class PhotoResizer {
             if(originalDownload.isDone()) {
 
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
-                LOGGER.info("Download complete.");
+                LOGGER.info("Download complete. " + originalImage);
 
                 // read the downloaded image in to a BufferedImage and get the dimensions
                 BufferedImage originalBuffImage = ImageIO.read(originalImage);
-                int width = originalBuffImage.getWidth(null);
-                int height = originalBuffImage.getHeight(null);
-                LOGGER.info("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
+                LOGGER.info("Generated originalBuffImage: " + originalBuffImage);
+                if (originalBuffImage != null) {
+                    int width = originalBuffImage.getWidth(null);
+                    int height = originalBuffImage.getHeight(null);
+                    LOGGER.info("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
-                // This makes sure the originalImage is oriented correctly
-                this.transformOriginalImage(width, height, originalImage, originalBuffImage);
+                    // This makes sure the originalImage is oriented correctly
+                    this.transformOriginalImage(width, height, originalImage, originalBuffImage);
 
-                // store the images and the images in the imagesFileMap
-                imageFilesMap.put(PhotoResizerConfiguration.LARGE, originalImage);
-                imageFilesMap.put(PhotoResizerConfiguration.MEDIUM,
-                        File.createTempFile(PhotoResizerConfiguration.MEDIUM + "_", ".jpg", repository));
-                imageFilesMap.put(PhotoResizerConfiguration.THUMB,
-                        File.createTempFile(PhotoResizerConfiguration.THUMB + "_", ".jpg", repository));
+                    // store the images and the images in the imagesFileMap
+                    imageFilesMap.put(ImageSizeEnum.LARGE, originalImage);
+                    imageFilesMap.put(ImageSizeEnum.MEDIUM,
+                            File.createTempFile(ImageSizeEnum.MEDIUM.getSizeName() + "_", ".jpg", repository));
+                    imageFilesMap.put(ImageSizeEnum.THUMB,
+                            File.createTempFile(ImageSizeEnum.THUMB.getSizeName() + "_", ".jpg", repository));
 
-                // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
-                imageFilesMap.forEach(1, (size, imageFile) -> {
-                    ImageInformation imageData = resize(imageFile, PhotoResizerConfiguration.SIZES_MAP.get(size), originalBuffImage);
+                    // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
+                    imageFilesMap.forEach(1, (size, imageFile) -> {
+                        ImageInformation imageData = resize(imageFile, size.getPixelSize(), originalBuffImage);
 
-                    String keyName = baseImagePath + size + ".jpg";
-                    LOGGER.info("Mid App: keyname " + keyName + classInstance);
+                        String keyName = baseImagePath + size.getSizeName() + ".jpg";
+                        LOGGER.info("Mid App: keyname " + keyName + classInstance);
 
-                    // upload the file. TODO: this should call the uploader service
-                    s3FileUpload(imageFilesMap.get(size), keyName);
-                    String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
-                    imagesURLMap.put(size + "_url",uploadedURL);
-                    imagesURLMap.put(size + "_height", String.valueOf(imageData.height));
-                    imagesURLMap.put(size + "_width", String.valueOf(imageData.width));
-                });
+                        // upload the file. TODO: this should call the uploader service
+                        s3Client.fileUpload(imageFile, keyName);
+                        String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
+                        imagesURLMap.put(size.getSizeName() + "_url",uploadedURL);
+                        imagesURLMap.put(size.getSizeName() + "_height", String.valueOf(imageData.height));
+                        imagesURLMap.put(size.getSizeName() + "_width", String.valueOf(imageData.width));
+                    });
 
+                }
             }
         }
         catch (MalformedInputException e) {
             LOGGER.error("URL error: ", e);
+            throw new ResizerException("Invalid URL while resizing", e);
         }
         catch (FileSystemException e) {
             LOGGER.error("FileSystem error: ", e);
+            throw new ResizerException("FileSystem Exception while resizing", e);
         }
         catch (Exception e) {
             LOGGER.error("General error: ", e);
+            throw new ResizerException("Generic Exception while resizing", e);
         } finally {
-            for(String image:imageFilesMap.keySet()) {
+            for(ImageSizeEnum image:imageFilesMap.keySet()) {
                 imageFilesMap.get(image).delete();
                 imageFilesMap.remove(image);
             }
@@ -459,63 +443,6 @@ public class PhotoResizer {
                 break;
         }
         return t;
-    }
-
-    /**
-     * Uploads a file to S3 using the {@link AmazonS3Client}. In the event of upload
-     * failure, this method will be called recursively as many times as is specified in the
-     * the s3ReAttempts variable
-     *
-     * TODO: This should make a call to the uploader service to separate functionality
-     *
-     * @param fileToUpload the file which will be uploaded
-     * @param keyName the file URL
-     *
-     * @return boolean: true if the file was uploaded, false otherwise
-     */
-    private boolean s3FileUpload(File fileToUpload,String keyName) {
-
-        try {
-            // TransferManager processes all transfers asynchronously, so this call will return immediately.
-            // Sometimes the URL's come in with the bucketname to start with
-
-            keyName = keyName.replaceFirst("^/" + existingBucketName,"");
-            // This is because the original key should not have a starting slash
-            keyName = keyName.replaceFirst("^/", "");
-            Upload upload = transferManager.upload(existingBucketName, keyName, fileToUpload);
-
-            // You can poll your transfer's status to check its progress
-            if (!upload.isDone()) {
-                LOGGER.info("Transfer: " + upload.getDescription());
-                LOGGER.info("  - State: " + upload.getState());
-                LOGGER.info("  - Progress: " + upload.getProgress().getBytesTransferred());
-            }
-
-            // Transfers also allow you to set a ProgressListener to receive
-            // asynchronous notifications about your transfer's progress.
-            upload.waitForCompletion();
-            if(upload.isDone()) {
-                LOGGER.info("Transfer: " + upload.getDescription());
-                LOGGER.info("Upload complete.");
-            }
-        } catch (AmazonClientException amazonClientException) {
-            boolean uploaded = false;
-            if (s3ReAttempts < 3) {
-                s3ReAttempts++;
-                LOGGER.error("Struggling to upload file: Attempt" + s3ReAttempts);
-                uploaded = s3FileUpload(fileToUpload, keyName);
-            }
-
-            LOGGER.error("Unable to upload file, upload was aborted:" + amazonClientException.getMessage());
-            amazonClientException.printStackTrace();
-            return uploaded;
-        }
-        catch (InterruptedException e) {
-            LOGGER.error("Unable to upload file, upload was aborted:", e);
-            e.printStackTrace();
-            return false;
-        }
-        return true;
     }
 
     /**

@@ -65,7 +65,7 @@ logging:
 
 # The S3Client configuration
 s3Client:
-  existingBucketName: ${S3_BUCKET:-placeholder_bucket}
-  s3Url: ${S3_URL:-placeholder_url}
-  accessKey: ${AWS_ACCESS_KEY_ID:-default_key}
-  secretKey: ${AWS_SECRET_ACCESS_KEY:-default_secret}
+  existingBucketName: <your-bucket-name>
+  s3Url: s3.amazonaws.com
+  accessKey: <your-access-key>
+  secretKey: <your-secret-key>

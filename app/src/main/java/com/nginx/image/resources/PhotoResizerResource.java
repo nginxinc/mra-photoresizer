@@ -1,7 +1,10 @@
 package com.nginx.image.resources;
 
+import ch.qos.logback.core.status.Status;
 import com.codahale.metrics.annotation.Timed;
 import com.nginx.image.core.PhotoResizer;
+import com.nginx.image.net.S3Client;
+import com.nginx.image.util.ResizerException;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -17,10 +20,14 @@ import javax.ws.rs.core.MediaType;
 @Path("/v1/image")
 public class PhotoResizerResource {
 
+    private final S3Client s3Client;
+
     /**
      * Empty Constructor
      */
-    public PhotoResizerResource() {}
+    public PhotoResizerResource(S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
 
     /**
      * resizeImage() method assigned to the {@link javax.ws.rs.POST} HTTP method
@@ -48,9 +55,13 @@ public class PhotoResizerResource {
     @Timed
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-
     public String resizeImage(@FormParam("url") String url) {
-        PhotoResizer imageProcessor = new PhotoResizer();
-        return imageProcessor.resizeImage(url);
+        try {
+            return new PhotoResizer(s3Client).resizeImage(url);
+        } catch (ResizerException e) {
+            throw new WebApplicationException("{\"success\":false, \"errorMessage\":\" " + e.getMessage() + " \"}",
+                    Status.ERROR);
+        }
+
     }
 }

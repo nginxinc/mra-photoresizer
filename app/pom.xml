@@ -13,7 +13,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <dropwizard.version>0.9.0</dropwizard.version>
+        <dropwizard.version>1.2.2</dropwizard.version>
         <mainClass>com.nginx.image.PhotoResizerApplication</mainClass>
     </properties>
 
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-testing</artifactId>
-            <version>0.9.1</version>
+            <version>1.2.2</version>
             <exclusions>
                 <exclusion>
                     <artifactId>assertj-core</artifactId>
@@ -97,6 +97,12 @@
             <version>3.28.0</version>
             <scope>provided</scope>
             <type>zip</type>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>biz.paluch.redis</groupId>
