@@ -136,7 +136,17 @@ Replace _&lt;your-image-repo-name&gt;_ and execute the command below to build th
 docker build . -t <your-image-repo-name>/photoresizer:<tag>
 ```
 
-### 5. Runtime environment variables
+### 5. Modify the hosts file
+
+The resizer service stores images using Amazon S3, the location of which is specified by the S3_URL environment variable.
+
+For the purposes of demonstration, the application makes use of a simulated S3 service called [Fake S3](https://hub.docker.com/r/lphoward/fake-s3/), which runs as a separate service.
+
+While running the Ingenious application locally, you must update your hosts file to match the value that is set for the S3_URL environment variable. By defauult, this value is http://fake-s3, so the hosts file should look like:
+
+```127.0.0.1 fake-s3```
+
+### 6. Runtime environment variables
 In order to run the image, some environment variables must be set so that they are available during runtime.
 
 | Variable Name | Description | Example Value |
