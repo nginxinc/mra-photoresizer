@@ -59,9 +59,8 @@ public class S3Client {
     }
 
     public Download download(String baseImagePath, File originalImage) {
-        LOGGER.info("======= S3Client download: " + baseImagePath + ", file: " + originalImage);
-        return transferManager.download(existingBucketName,
-                baseImagePath.replace("/" + existingBucketName + "/", "") + "original.jpg", originalImage);
+        LOGGER.info("S3Client download: " + baseImagePath + ", file: " + originalImage);
+        return transferManager.download(existingBucketName, baseImagePath, originalImage);
     }
 
 
@@ -123,5 +122,12 @@ public class S3Client {
         return true;
     }
 
-
+    /**
+     * Getter for existingBucketName
+     *
+     * @return java.lang.String
+     */
+    public String getExistingBucketName() {
+        return existingBucketName;
+    }
 }

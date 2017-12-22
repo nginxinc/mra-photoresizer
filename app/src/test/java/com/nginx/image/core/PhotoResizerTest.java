@@ -12,7 +12,6 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;

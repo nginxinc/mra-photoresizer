@@ -98,6 +98,7 @@ public class PhotoResizer {
 
             // parse a URL from the imageURL parameter
             URL jpgURL = new URL(imageURL);
+            String extension = jpgURL.toString().substring(jpgURL.toString().lastIndexOf("."));
 
             // create the baseImagePath by removing the file name from the jpgURL
             // http://s3.amazonaws.com/bucket-name/path/original.jpg becomes
@@ -109,10 +110,12 @@ public class PhotoResizer {
             // We need to use files because the Sanselan EXIF libraries expect it
             File repository = Files.createTempDir();
             // Configure a repository (to ensure a secure temp location is used)
-            File originalImage = File.createTempFile(ImageSizeEnum.LARGE.getSizeName() + "_", ".jpg", repository);
+            File originalImage = File.createTempFile(ImageSizeEnum.LARGE.getSizeName() + "_", extension, repository);
 
             // http://s3.amazonaws.com/path/original.jpg
-            Download originalDownload = s3Client.download(baseImagePath, originalImage);
+            Download originalDownload = s3Client.download(
+                    baseImagePath.replace("/" + s3Client.getExistingBucketName() + "/", "") + "original" + extension,
+                    originalImage);
 
             if (!originalDownload.isDone()) {
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
@@ -142,15 +145,15 @@ public class PhotoResizer {
                     // store the images and the images in the imagesFileMap
                     imageFilesMap.put(ImageSizeEnum.LARGE, originalImage);
                     imageFilesMap.put(ImageSizeEnum.MEDIUM,
-                            File.createTempFile(ImageSizeEnum.MEDIUM.getSizeName() + "_", ".jpg", repository));
+                            File.createTempFile(ImageSizeEnum.MEDIUM.getSizeName() + "_", extension, repository));
                     imageFilesMap.put(ImageSizeEnum.THUMB,
-                            File.createTempFile(ImageSizeEnum.THUMB.getSizeName() + "_", ".jpg", repository));
+                            File.createTempFile(ImageSizeEnum.THUMB.getSizeName() + "_", extension, repository));
 
                     // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
                     imageFilesMap.forEach(1, (size, imageFile) -> {
                         ImageInformation imageData = resize(imageFile, size.getPixelSize(), originalBuffImage);
 
-                        String keyName = baseImagePath + size.getSizeName() + ".jpg";
+                        String keyName = baseImagePath + size.getSizeName() + extension;
                         LOGGER.info("Mid App: keyname " + keyName + classInstance);
 
                         // upload the file. TODO: this should call the uploader service
