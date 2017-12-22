@@ -12,7 +12,6 @@ import io.dropwizard.testing.junit.DropwizardAppRule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -74,7 +73,7 @@ public class PhotoResizerTest  {
             Object[] args = invocation.getArguments();
             FileUtils.copyFile(resourceFile, (File)args[1]);
             return new MockDownload();
-        }).when(mockS3).download(anyString(), any(File.class), anyString());
+        }).when(mockS3).download(anyString(), any(File.class));
 
         when(mockS3.fileUpload(any(), anyString())).thenReturn(Boolean.TRUE);
 

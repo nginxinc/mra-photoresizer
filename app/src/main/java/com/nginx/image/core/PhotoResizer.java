@@ -113,7 +113,9 @@ public class PhotoResizer {
             File originalImage = File.createTempFile(ImageSizeEnum.LARGE.getSizeName() + "_", extension, repository);
 
             // http://s3.amazonaws.com/path/original.jpg
-            Download originalDownload = s3Client.download(baseImagePath, originalImage, extension);
+            Download originalDownload = s3Client.download(
+                    baseImagePath.replace("/" + s3Client.getExistingBucketName() + "/", "") + "original" + extension,
+                    originalImage);
 
             if (!originalDownload.isDone()) {
                 LOGGER.info("Transfer: " + originalDownload.getDescription());
