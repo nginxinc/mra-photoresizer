@@ -58,10 +58,10 @@ public class S3Client {
 
     }
 
-    public Download download(String baseImagePath, File originalImage) {
+    public Download download(String baseImagePath, File originalImage, String extension) {
         LOGGER.info("======= S3Client download: " + baseImagePath + ", file: " + originalImage);
         return transferManager.download(existingBucketName,
-                baseImagePath.replace("/" + existingBucketName + "/", "") + "original.jpg", originalImage);
+                baseImagePath.replace("/" + existingBucketName + "/", "") + "original" + extension, originalImage);
     }
 
 

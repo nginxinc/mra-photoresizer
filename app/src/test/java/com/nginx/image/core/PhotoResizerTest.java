@@ -74,7 +74,7 @@ public class PhotoResizerTest  {
             Object[] args = invocation.getArguments();
             FileUtils.copyFile(resourceFile, (File)args[1]);
             return new MockDownload();
-        }).when(mockS3).download(anyString(), any(File.class));
+        }).when(mockS3).download(anyString(), any(File.class), anyString());
 
         when(mockS3.fileUpload(any(), anyString())).thenReturn(Boolean.TRUE);
 
