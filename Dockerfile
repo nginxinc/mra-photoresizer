@@ -53,8 +53,6 @@ RUN mvn clean install && \
     target/generated-sources target/generated-test-sources target/javadoc-bundle-options \
     target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 
-COPY ./status.html /usr/share/nginx/html/status.html
-
 EXPOSE 80 8000 12005
 
 CMD ["./start.sh"]
