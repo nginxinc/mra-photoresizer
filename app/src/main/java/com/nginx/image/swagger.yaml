@@ -1,0 +1,79 @@
+swagger: "2.0"
+info:
+  description: "MRA Content Service API"
+  version: "1.0.0"
+  title: "MRA Content Service API"
+  contact:
+    name: "Aidan Carson"
+    email: "aidan.carson@nginx.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+# basePath: "/v1"
+paths:
+  /v1/image:
+    get:
+      tags:
+      - "image"
+      summary: "Test S3 link"
+      responses:
+        200:
+          description: "Return new image information"
+          schema:
+            $ref: "#/definitions/Images"
+        404:
+          description: "Image not found"
+      x-tags:
+      - tag: "image"
+      x-operationId: "Images"
+    post:
+      tags:
+      - "image"
+      summary: "Resize Image"
+      parameters:
+      - name: "imageURL"
+        in: "query"
+        description: "The id of article to be fetched"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Images"
+        404:
+          description: "Image not found"
+      x-tags:
+      - tag: "image"
+      x-operationId: "NewImage"
+definitions:
+  Images:
+    type: "object"
+    properties:
+      thumb_url:
+        type: "string"
+      Large_width:
+        type: "string"
+      Medium_height:
+        type: "string"
+      Medium_width:
+        type: "string"
+      Thumb_width:
+        type: "string"
+      Thumb_height:
+        type: "string"
+      medium_url:
+        type: "string"
+      large_url:
+        type: "string"
+      Large_height:
+        type: "string"
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+# basePath: /SirNexus/image-manager/1.0.0
+schemes:
+ - https
+# Added by API Auto Mocking Plugin
+# basePath: /SirNexus/content-service/1.0.0
+# Added by API Auto Mocking Plugin
+basePath: /SirNexus/photo-resizer/1.0.0
