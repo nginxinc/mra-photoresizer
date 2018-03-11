@@ -1,0 +1,14 @@
+app/META-INF/
+app/ch/
+app/com/
+app/io/
+app/javassist/
+app/javax/
+app/jersey/
+app/junit/
+app/models/
+app/mozilla/
+app/net/
+app/newrelic/
+app/org/
+app/target/

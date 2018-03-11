@@ -1,0 +1,77 @@
+openapi: 3.0.0
+servers:
+  - url: /v1
+info:
+  description: MRA Photo Resizer API
+  version: "1.0.0-oas3"
+  title: MRA Photo Resizer API
+  contact:
+    name: Aidan Carson
+    email: aidan.carson@nginx.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+paths:
+  /v1/image:
+    get:
+      tags:
+        - image
+      summary: Test S3 link
+      responses:
+        '200':
+          description: Return new image information
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Images'
+        '404':
+          description: Image not found
+      x-tags:
+        - tag: image
+      x-operationId: Images
+    post:
+      tags:
+        - image
+      summary: Resize Image
+      parameters:
+        - name: imageURL
+          in: query
+          description: The id of article to be fetched
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Images'
+        '404':
+          description: Image not found
+      x-tags:
+        - tag: image
+      x-operationId: NewImage
+components:
+  schemas:
+    Images:
+      type: object
+      properties:
+        thumb_url:
+          type: string
+        Large_width:
+          type: string
+        Medium_height:
+          type: string
+        Medium_width:
+          type: string
+        Thumb_width:
+          type: string
+        Thumb_height:
+          type: string
+        medium_url:
+          type: string
+        large_url:
+          type: string
+        Large_height:
+          type: string
