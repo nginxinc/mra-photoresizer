@@ -4,9 +4,9 @@ APP="java -jar target/PhotoResizer-1.0.1-SNAPSHOT.jar server PhotoResizer.yaml"
 
 NGINX_CONF="/etc/nginx/nginx.conf";
 
-$APP &
+nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;" &
 
-nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;"
+su me -c 'java -jar target/PhotoResizer-1.0.1-SNAPSHOT.jar server PhotoResizer.yaml' &
 
 sleep 30
 APP_PID=`ps aux | grep "$APP" | grep -v grep`
