@@ -1,7 +1,6 @@
 FROM openjdk:8-jdk
 
-RUN useradd --create-home -s /bin/bash me
-USER me
+RUN useradd --create-home -s /bin/bash resizer
 
 ARG CONTAINER_ENGINE_ARG
 ARG USE_NGINX_PLUS_ARG
@@ -17,8 +16,6 @@ ENV USE_NGINX_PLUS=${USE_NGINX_PLUS_ARG:-true} \
     CONTAINER_ENGINE=${CONTAINER_ENGINE_ARG:-kubernetes}
 
 COPY nginx/ssl /etc/ssl/nginx/
-
-USER root
 
 # Install Required packages for installing NGINX Plus
 RUN apt-get update && apt-get install -y \
