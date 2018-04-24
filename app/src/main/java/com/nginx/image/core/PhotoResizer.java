@@ -6,10 +6,11 @@ import com.amazonaws.services.s3.transfer.Download;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Files;
-import com.nginx.image.PhotoResizerConfiguration;
+import com.nginx.image.configs.PhotoResizerConfiguration;
 import com.nginx.image.net.S3Client;
 import com.nginx.image.util.ImageSizeEnum;
 import com.nginx.image.util.ResizerException;
+import org.apache.sanselan.ImageReadException;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
@@ -60,7 +61,8 @@ public class PhotoResizer {
     private final String classInstance = " class instance = " + System.identityHashCode(this);
 
     // The compression quality to use when resizing images
-    private final Float compressionQuality = PhotoResizerConfiguration.getCompressionQuality();
+    private final PhotoResizerConfiguration config;
+    private final Float compressionQuality;
 
     private final S3Client s3Client;
 
@@ -69,19 +71,27 @@ public class PhotoResizer {
      *
      * Initializes the {@link AmazonS3Client} using {@link AWSCredentials} generated from the
      * environment variables set in the {@link PhotoResizerConfiguration}
+     *
+     * @param s3Client The client needed to retrieve and store images
+     * @param configuration the configuration object needed for resize and compression values
      */
-    public PhotoResizer(S3Client s3Client) {
+    public PhotoResizer(S3Client s3Client, PhotoResizerConfiguration configuration)
+    {
         this.s3Client = s3Client;
+        this.config = configuration;
+        compressionQuality = config.getResizerConfiguration().getCompressionQuality();
     }
 
     /**
      * Work method which downloads and begins the process of resizing the image specified
-     * in the imageURL parameter. The actual resizing is done in the {@link #resize(File, int, int, BufferedImage)}
+     * in the imageURL parameter. The actual resizing is done in the {@link #resize(File, int, BufferedImage)}
      * method
      *
      * @param imageURL a String indicating the location of the original image to resize
      *
      * @return a JSON String which represents a map of the resized image locations
+     *
+     * @throws ResizerException telling you what happened.
      */
     public String resizeImage(String imageURL) throws ResizerException {
 
@@ -140,7 +150,7 @@ public class PhotoResizer {
                     LOGGER.info("Start Files: Original ImagePath " + originalImage.getAbsolutePath() + " : " +imageURL + classInstance);
 
                     // This makes sure the originalImage is oriented correctly
-                    this.transformOriginalImage(width, height, originalImage, originalBuffImage);
+                    BufferedImage finalOriginalBuffImage  = this.transformOriginalImage(width, height, originalImage, originalBuffImage);
 
                     // store the images and the images in the imagesFileMap
                     imageFilesMap.put(ImageSizeEnum.LARGE, originalImage);
@@ -150,20 +160,25 @@ public class PhotoResizer {
                             File.createTempFile(ImageSizeEnum.THUMB.getSizeName() + "_", extension, repository));
 
                     // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
-                    imageFilesMap.forEach(1, (size, imageFile) -> {
-                        ImageInformation imageData = resize(imageFile, size.getPixelSize(), originalBuffImage);
+                        imageFilesMap.forEach(1, (size, imageFile) -> {
+                            try{
+                                ImageInformation imageData = resize(imageFile, config.getImageSizeConfiguration().getImageSize(size), finalOriginalBuffImage);
+                                String keyName = baseImagePath + size.getSizeName() + extension;
+                                LOGGER.info("Mid App: keyname " + keyName + classInstance);
 
-                        String keyName = baseImagePath + size.getSizeName() + extension;
-                        LOGGER.info("Mid App: keyname " + keyName + classInstance);
-
-                        // upload the file. TODO: this should call the uploader service
-                        s3Client.fileUpload(imageFile, keyName);
-                        String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
-                        imagesURLMap.put(size.getSizeName() + "_url",uploadedURL);
-                        imagesURLMap.put(size.getSizeName() + "_height", String.valueOf(imageData.height));
-                        imagesURLMap.put(size.getSizeName() + "_width", String.valueOf(imageData.width));
-                    });
-
+                                // upload the file. TODO: this should call the uploader service
+                                s3Client.fileUpload(imageFile, keyName);
+                                String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
+                                imagesURLMap.put(size.getSizeName() + "_url",uploadedURL);
+                                imagesURLMap.put(size.getSizeName() + "_height", String.valueOf(imageData.height));
+                                imagesURLMap.put(size.getSizeName() + "_width", String.valueOf(imageData.width));
+                            }
+                            catch (Exception e)
+                            {
+                                LOGGER.error("Caught exception during resize for file " + imageFile +
+                                        " with maxSize " + config.getImageSizeConfiguration().getImageSize(size), e);
+                            }
+                        });
                 }
             }
         }
@@ -247,65 +262,43 @@ public class PhotoResizer {
      *
      * @return an {@link ImageInformation} object
      */
-    private ImageInformation resize(File resizedImageFile, int maxSize, BufferedImage originalBuffImage) {
-        ImageInformation imageData = new ImageInformation(1,0,0);
+    private ImageInformation resize(File resizedImageFile, int maxSize, BufferedImage originalBuffImage) throws Exception {
         try {
 
             double scale;
 
             // maxSize == -1 means that the original size should be used
-            if(maxSize == -1) {
-                imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
-                return imageData;
-            } else if (originalBuffImage.getWidth() > originalBuffImage.getHeight()) {
-                // if the image is wider than it is tall, then scale base on width
-                scale = (double) maxSize/originalBuffImage.getWidth();
-            } else {
-                // if the image is taller than it is wide, then scale base on height
-                scale = (double) maxSize/originalBuffImage.getHeight();
+            if(maxSize != -1) {
+                if (originalBuffImage.getWidth() > originalBuffImage.getHeight()) {
+                    // if the image is wider than it is tall, then scale base on width
+                    scale = (double) maxSize/originalBuffImage.getWidth();
+                } else {
+                    // if the image is taller than it is wide, then scale base on height
+                    scale = (double) maxSize/originalBuffImage.getHeight();
+                }
+                // get the scaling dimensions
+                int widthScale = (int) round(scale * originalBuffImage.getWidth());
+                int heightScale = (int) round(scale * originalBuffImage.getHeight());
+
+                BufferedImage resizedBuffImage;
+                resizedBuffImage = new BufferedImage(widthScale, heightScale, BufferedImage.TYPE_INT_RGB);
+                Image tmp = originalBuffImage.getScaledInstance(widthScale, heightScale, BufferedImage.SCALE_SMOOTH);
+                resizedBuffImage.getGraphics().drawImage(tmp, 0, 0, null);
+                originalBuffImage = resizedBuffImage;
+                resizedBuffImage.flush();
+                tmp.flush();
             }
+            ImageInformation imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
+            writeJpg(resizedImageFile, originalBuffImage, compressionQuality);
+            return imageData;
 
-            // get the scaling dimensions
-            int widthScale = (int) round(scale * originalBuffImage.getWidth());
-            int heightScale = (int) round(scale * originalBuffImage.getHeight());
-
-            // call secondary resize method
-            return this.resize(resizedImageFile, widthScale, heightScale, originalBuffImage);
         } catch (Exception e) {
             LOGGER.error("Caught exception during resize for file " + resizedImageFile +
                     " with maxSize " + maxSize, e);
+            throw e;
         }
-        return imageData;
     }
 
-    /**
-     * Helper method which resizes an image using specific height and width parameters
-     *
-     * @param resizedImageFile the location to store the image
-     * @param width the width of the image to resize
-     * @param height the height of the image to resize
-     * @param originalBuffImage the BufferedImage object which was downloaded in {@link #resizeImage(String)}
-     *
-     * @return an {@link ImageInformation} object containing the resized image
-     */
-    private ImageInformation resize(File resizedImageFile, int width, int height, BufferedImage originalBuffImage) {
-
-        // initialize the return value
-        BufferedImage resizedBuffImage;
-
-        try {
-            resizedBuffImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-            Image tmp = originalBuffImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
-            resizedBuffImage.getGraphics().drawImage(tmp, 0, 0, null);
-
-            writeJpg(resizedImageFile, resizedBuffImage, compressionQuality);
-            resizedBuffImage.flush();
-            tmp.flush();
-        } catch (Exception e) {
-            LOGGER.error("This is the general exception message: ", e);
-        }
-        return new ImageInformation(1, width, height);
-    }
 
     /**
      * This method writes a JPG file to the file system
@@ -360,7 +353,8 @@ public class PhotoResizer {
      * @param originalImage the image to transform
      * @param originalBuffImage the buffered image
      */
-    private void transformOriginalImage(int width, int height, File originalImage, BufferedImage originalBuffImage) {
+    private BufferedImage transformOriginalImage(int width, int height, File originalImage, BufferedImage originalBuffImage) throws IOException, ImageReadException
+    {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
             TiffImageMetadata data=null;
@@ -370,14 +364,15 @@ public class PhotoResizer {
             int orientation = 0;
             if (data != null && data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION) != null) {
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
-                if(orientation == 1) return;
+                if(orientation == 1) return originalBuffImage;
+                // THis is returned here because the image doesn't need to be reoriented at all.
             }
             AffineTransform t = getExifTransformation(new ImageInformation(orientation,width,height));
             originalBuffImage = transformImage(originalBuffImage,t);
-            writeJpg(originalImage, originalBuffImage, compressionQuality);
-            originalBuffImage.flush();
+            return originalBuffImage;
         } catch (Exception e) {
             LOGGER.error("This is the general exception message: ", e);
+            throw e;
         }
     }
 

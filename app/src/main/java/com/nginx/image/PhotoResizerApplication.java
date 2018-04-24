@@ -1,7 +1,10 @@
 package com.nginx.image;
 
+import com.nginx.image.configs.PhotoResizerConfiguration;
+import com.nginx.image.health.CPUHealthCheck;
 import com.nginx.image.health.DiskHealthCheck;
 import com.nginx.image.health.MemoryHealthCheck;
+import com.nginx.image.net.S3Client;
 import com.nginx.image.resources.PhotoResizerResource;
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
@@ -76,11 +79,13 @@ public class PhotoResizerApplication extends Application<PhotoResizerConfigurati
     public void run(final PhotoResizerConfiguration configuration,
                     final Environment environment) {
 
-        // add memory and disk health checks to environment
-        environment.healthChecks().register("disk", new DiskHealthCheck());
-        environment.healthChecks().register("memory", new MemoryHealthCheck());
+        // add memory, cpu and disk health checks to environment
+        environment.healthChecks().register("disk", new DiskHealthCheck(configuration.getHealthCheckConfiguration().getDiskThreshold()));
+        environment.healthChecks().register("memory", new MemoryHealthCheck(configuration.getHealthCheckConfiguration().getMemoryThreshold()));
+        environment.healthChecks().register("cpu", new CPUHealthCheck(configuration.getHealthCheckConfiguration().getCpuThreshold()));
 
-        // register the PhotoResizerResource class 
-        environment.jersey().register(new PhotoResizerResource(configuration.getS3Client().build(environment)));
+        // register the PhotoResizerResource class
+        S3Client resizerS3 = configuration.getResizerConfiguration().getS3Client().build(environment);
+        environment.jersey().register(new PhotoResizerResource(resizerS3, configuration));
     }
 }
