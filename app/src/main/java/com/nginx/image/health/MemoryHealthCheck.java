@@ -1,6 +1,8 @@
 package com.nginx.image.health;
 
 import com.codahale.metrics.health.HealthCheck;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.text.NumberFormat;
@@ -20,15 +22,24 @@ public class MemoryHealthCheck extends HealthCheck {
     private static final String ERROR_MESSAGE_STRING = "free memory: {0}, " +
             "allocated memory: {1}, max memory: {2}, percent of memory used: {3, number, percent}%";
 
+    // The logger for this instance of the service
+    private static final Logger LOGGER = LoggerFactory.getLogger(MemoryHealthCheck.class);
+
     private final Runtime runtime;
+    private double memoryThreshold;
 
     /**
      * Default no-arg constructor
      *
      * Instantiates the runtime variable by calling {@link Runtime#getRuntime()}
+     *
+     * @param memoryThresholdParam The double value used to calculate when memory is being used up, e.g. 0.8 = 80% of available memory
+
      */
-    public MemoryHealthCheck() {
+    public MemoryHealthCheck(double memoryThresholdParam)
+    {
         runtime = Runtime.getRuntime();
+        memoryThreshold = memoryThresholdParam;
     }
 
     /**
@@ -48,13 +59,14 @@ public class MemoryHealthCheck extends HealthCheck {
         long freeMemory = runtime.freeMemory();
 
         // evaluate whether there is 80% or more memory free
-        if ((1 - ((float)freeMemory/allocatedMemory)) > 0.8) {
+        if ((1 - ((float)freeMemory/allocatedMemory)) > memoryThreshold) {
             String errorMessage = memoryUsed(allocatedMemory, freeMemory);
-            System.out.println("*****UNHEALTHY*******: " + errorMessage);
+            LOGGER.error("*****UNHEALTHY*******: " + errorMessage);
             runtime.gc();
-            System.out.println("*****GC Called*******: " + errorMessage);
+            LOGGER.error("*****GC Called*******: " + errorMessage);
             return Result.unhealthy(errorMessage);
         }
+        LOGGER.debug(memoryUsed(allocatedMemory, freeMemory));
         return Result.healthy();
     }
 
