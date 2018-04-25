@@ -68,8 +68,8 @@ resizerConfiguration:
   s3Client:
     existingBucketName: ${S3_BUCKET:-mra-images}
     s3Url: ${S3_URL:-http://fake-s3:4569}
-    accessKey: <your-access-key>
-    secretKey: <your-secret-key>
+    accessKey: ${AWS_ACCESS_KEY_ID}
+    secretKey: ${AWS_SECRET_ACCESS_KEY}
 
 #The HealthCheck Thresholds
 healthCheckConfiguration:
