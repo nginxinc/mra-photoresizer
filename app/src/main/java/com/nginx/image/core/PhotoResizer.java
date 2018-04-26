@@ -62,8 +62,6 @@ public class PhotoResizer {
 
     // The compression quality to use when resizing images
     private final PhotoResizerConfiguration config;
-    private final Float compressionQuality;
-
     private final S3Client s3Client;
 
     /**
@@ -79,7 +77,6 @@ public class PhotoResizer {
     {
         this.s3Client = s3Client;
         this.config = configuration;
-        compressionQuality = config.getResizerConfiguration().getCompressionQuality();
     }
 
     /**
@@ -289,7 +286,7 @@ public class PhotoResizer {
                 tmp.flush();
             }
             ImageInformation imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
-            writeJpg(resizedImageFile, originalBuffImage, compressionQuality);
+            writeJpg(resizedImageFile, originalBuffImage, this.config.getResizerConfiguration().getCompressionQuality());
             return imageData;
 
         } catch (Exception e) {
