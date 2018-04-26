@@ -64,6 +64,9 @@ public class S3ClientFactory {
 
     /**
      * Setter for existingBucketName
+     *
+     * @param existingBucketName is a String with the name of the directory/bucket that images will be retrieved
+     *                           and stored in.
      */
     @JsonProperty
     public void setExistingBucketName(String existingBucketName) {
@@ -82,6 +85,8 @@ public class S3ClientFactory {
 
     /**
      * Setter for s3Url
+     *
+     * @param s3Url is the full URL with the s3 host e.g. http://fake-s3:4569
      */
     @JsonProperty
     public void setS3Url(String s3Url) {
@@ -100,6 +105,8 @@ public class S3ClientFactory {
 
     /**
      * Setter for accessKey
+     *
+     * @param accessKey is the AWS key used to access S3. If you are using the fake-s3 service, then any value will work.
      */
     @JsonProperty
     public void setAccessKey(String accessKey) {
@@ -118,6 +125,8 @@ public class S3ClientFactory {
 
     /**
      * Setter for secretKey
+     *
+     * @param secretKey is the AWS secret key sued to access s3. If you are using the fake-s3 service, then any value will work.
      */
     @JsonProperty
     public void setSecretKey(String secretKey) {
@@ -136,6 +145,8 @@ public class S3ClientFactory {
 
     /**
      * Setter for s3Retries
+     *
+     * @param s3Retries is the number of times that the s3 client will retry accessing the destination
      */
     @JsonProperty
     public void setS3Retries(int s3Retries) {
