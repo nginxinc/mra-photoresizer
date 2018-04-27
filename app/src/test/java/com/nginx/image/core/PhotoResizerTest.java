@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
  //  PhotoResizerTest.java
  //  PhotoResizer
  //
- //  Copyright © 2017 NGINX Inc. All rights reserved.
+ //  Copyright © 2018 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerTest  {
