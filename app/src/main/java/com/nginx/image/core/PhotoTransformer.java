@@ -1,13 +1,6 @@
 package com.nginx.image.core;
 
 import com.nginx.image.core.PhotoResizer.ImageInformation;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Files;
-import com.nginx.image.configs.PhotoResizerConfiguration;
-import com.nginx.image.net.S3Client;
-import com.nginx.image.util.ImageSizeEnum;
-import com.nginx.image.util.ResizerException;
 import org.apache.sanselan.ImageReadException;
 import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
@@ -18,27 +11,12 @@ import org.apache.sanselan.formats.tiff.constants.TiffConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
-import java.awt.image.IndexColorModel;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.MalformedInputException;
-import java.nio.file.FileSystemException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -63,7 +41,6 @@ public class PhotoTransformer {
 
     }
 
-
     /**
      * Method which takes an image file and calls {@link #transformImage}
      *
@@ -72,7 +49,7 @@ public class PhotoTransformer {
      * @param originalImage the image to transform
      * @param originalBuffImage the buffered image
      */
-    private BufferedImage PhotoTransformer(int width, int height, File originalImage, BufferedImage originalBuffImage) throws IOException, ImageReadException
+    public BufferedImage transformImage(int width, int height, File originalImage, BufferedImage originalBuffImage) throws IOException, ImageReadException
     {
         try {
             JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
