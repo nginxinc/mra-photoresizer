@@ -27,6 +27,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * PhotoIO.java
+ * PhotoIO
+ *
+ * Class that does the work of retrieving from a URL, saving to disk, uploading the image
+ *
+ * Copyright © 2018 NGINX Inc. All rights reserved.
+ */
 public class PhotoIO
 {
     // The logger for this instance of the service
@@ -36,6 +44,11 @@ public class PhotoIO
     private final String classInstance = " class instance = " + System.identityHashCode(this);
     private final S3Client s3Client;
 
+    /**
+     * The constructor method takes an instantiated S3 client
+     *
+     * @param s3Client the name of the {@link S3Client}
+     */
     public PhotoIO(S3Client s3Client)
     {
         this.s3Client = s3Client;
@@ -44,8 +57,8 @@ public class PhotoIO
     /**
      * This method writes a JPG file to the file system
      *
-     * @param fileHandle the name of the file
-     * @param resizedImage the resized image to write
+     * @param fileHandle the name of the {@link File}
+     * @param resizedImage the resized {@link BufferedImage} to write
      * @param compressionQuality the compression quality to use when saving the image
      */
     public void writeJpg(File fileHandle, BufferedImage resizedImage, float compressionQuality) throws ResizerException
@@ -92,6 +105,13 @@ public class PhotoIO
         }
     }
 
+    /**
+     * This method retrieves the image from a URL
+     *
+     * @param imageURL the name of the {@link String}
+     *
+     * @return a {@link ConcurrentHashMap<ImageSizeEnum,File>} is returned with 3 image files created corresponding to the ImageSizeEnum
+     */
     public ConcurrentHashMap<ImageSizeEnum,File> getImage(String imageURL) throws ResizerException
     {
         try
@@ -168,9 +188,15 @@ public class PhotoIO
         }
     }
 
-    public void uploadImage(File imageFile, String keyName)
+    /**
+     * This method uploads the image to S3
+     *
+     * @param imageFile the image that is being uploaded from a {@link File} to S3
+     *
+     */
+    public void uploadImage(File imageFile, String imagePath)
     {
         // upload the file. TODO: this should call the uploader service
-        s3Client.fileUpload(imageFile, keyName);
+        s3Client.fileUpload(imageFile, imagePath);
     }
 }

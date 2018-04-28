@@ -6,8 +6,6 @@ import org.apache.sanselan.Sanselan;
 import org.apache.sanselan.formats.jpeg.JpegImageMetadata;
 import org.apache.sanselan.formats.tiff.TiffImageMetadata;
 import org.apache.sanselan.formats.tiff.constants.ExifTagConstants;
-import org.apache.sanselan.formats.tiff.constants.TagInfo;
-import org.apache.sanselan.formats.tiff.constants.TiffConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +34,10 @@ public class PhotoTransformer {
     private final String classInstance = " class instance = " + System.identityHashCode(this);
 
 
+    /**
+     * Default no-args constructor
+     *
+    **/
     public PhotoTransformer()
     {
 
@@ -46,13 +48,13 @@ public class PhotoTransformer {
      *
      * @param width the width to use in the transformation
      * @param height the height to use in the transformation
-     * @param originalImage the image to transform
-     * @param originalBuffImage the buffered image
+     * @param imageFile the image to transform {@link File}
+     * @param bufferedImage the buffered image {@link BufferedImage}
      */
-    public BufferedImage transformImage(int width, int height, File originalImage, BufferedImage originalBuffImage) throws IOException, ImageReadException
+    public BufferedImage transformImage(int width, int height, File imageFile, BufferedImage bufferedImage) throws IOException, ImageReadException
     {
         try {
-            JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(originalImage));
+            JpegImageMetadata meta=((JpegImageMetadata) Sanselan.getMetadata(imageFile));
             TiffImageMetadata data=null;
             if (meta != null) {
                 data = meta.getExif();
@@ -60,12 +62,12 @@ public class PhotoTransformer {
             int orientation = 0;
             if (data != null && data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION) != null) {
                 orientation = data.findField(ExifTagConstants.EXIF_TAG_ORIENTATION).getIntValue();
-                if(orientation == 1) return originalBuffImage;
+                if(orientation == 1) return bufferedImage;
                 // THis is returned here because the image doesn't need to be reoriented at all.
             }
             AffineTransform t = getExifTransformation(new ImageInformation(orientation,width,height));
-            originalBuffImage = transformImage(originalBuffImage,t);
-            return originalBuffImage;
+            bufferedImage = transformImage(bufferedImage,t);
+            return bufferedImage;
         } catch (Exception e) {
             LOGGER.error("This is the general exception message: ", e);
             throw e;
@@ -75,7 +77,7 @@ public class PhotoTransformer {
     /**
      * Transforms an image using {@link AffineTransformOp} and {@link Graphics2D}
      *
-     * @param image the image to transform
+     * @param image the image to transform {@link BufferedImage}
      * @param transform the {@link AffineTransform} object
      *
      * @return a {@link BufferedImage} object
