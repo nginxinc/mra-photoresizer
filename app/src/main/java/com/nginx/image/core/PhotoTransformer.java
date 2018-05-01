@@ -137,6 +137,8 @@ public class PhotoTransformer {
                 t.translate(0, info.width);
                 t.rotate(  3 * Math.PI / 2);
                 break;
+            default: //essentially the same as case 1
+                break;
         }
         return t;
     }
