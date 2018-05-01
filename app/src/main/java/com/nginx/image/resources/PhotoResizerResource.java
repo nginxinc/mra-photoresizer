@@ -2,6 +2,7 @@ package com.nginx.image.resources;
 
 import ch.qos.logback.core.status.Status;
 import com.codahale.metrics.annotation.Timed;
+import com.nginx.image.configs.PhotoResizerConfiguration;
 import com.nginx.image.core.PhotoResizer;
 import com.nginx.image.net.S3Client;
 import com.nginx.image.util.ResizerException;
@@ -10,7 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
- * PhotoResizerResource class: Copyright © 2017 NGINX Inc. All rights reserved.
+ * PhotoResizerResource class: Copyright © 2018 NGINX Inc. All rights reserved.
  *
  * Defines the GET and POST methods which act as endpoints for the photo resizing
  * functionality
@@ -21,12 +22,18 @@ import javax.ws.rs.core.MediaType;
 public class PhotoResizerResource {
 
     private final S3Client s3Client;
+    private final PhotoResizerConfiguration config;
 
     /**
-     * Empty Constructor
+     * Constructor
+     *
+     * @param s3Client s3Client needed to access the image resources
+     * @param configuration configuration required to populate values down the object hierarchy
      */
-    public PhotoResizerResource(S3Client s3Client) {
+    public PhotoResizerResource(S3Client s3Client, PhotoResizerConfiguration configuration)
+    {
         this.s3Client = s3Client;
+        this.config = configuration;
     }
 
     /**
@@ -57,7 +64,7 @@ public class PhotoResizerResource {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public String resizeImage(@FormParam("url") String url) {
         try {
-            return new PhotoResizer(s3Client).resizeImage(url);
+            return new PhotoResizer(s3Client, config).resizeImage(url);
         } catch (ResizerException e) {
             throw new WebApplicationException("{\"success\":false, \"errorMessage\":\" " + e.getMessage() + " \"}",
                     Status.ERROR);

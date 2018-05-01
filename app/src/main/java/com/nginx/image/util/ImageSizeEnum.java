@@ -7,27 +7,19 @@ import org.apache.commons.lang3.StringUtils;
  * User: charlespretzer
  */
 public enum ImageSizeEnum {
-    LARGE(-1, "large"),
-    MEDIUM(640, "medium"),
-    THUMB(120, "thumb");
 
-    private final Integer pixelSize;
+    LARGE("large"),
+    MEDIUM("medium"),
+    THUMB("thumb");
+
     private final String size;
+//    private final PhotoResizerConfiguration configuration;
 
-    ImageSizeEnum(Integer pixelSize, String size) {
-        this.pixelSize = pixelSize;
+    ImageSizeEnum(String size) {
         this.size = StringUtils.lowerCase(size);
     }
 
     /**
-     * Getter for pixelSize
-     *
-     * @return java.lang.Integer
-     */
-    public Integer getPixelSize() {
-        return pixelSize;
-    }
-
     /**
      * Getter for size
      *
@@ -40,7 +32,6 @@ public enum ImageSizeEnum {
     @Override
     public String toString() {
         return "ImageSizeEnum{" +
-                "pixelSize=" + pixelSize +
                 ", size='" + size + '\'' +
                 '}';
     }

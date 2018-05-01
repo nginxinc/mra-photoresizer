@@ -3,7 +3,7 @@ package com.nginx.image.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nginx.image.PhotoResizerApplication;
-import com.nginx.image.PhotoResizerConfiguration;
+import com.nginx.image.configs.PhotoResizerConfiguration;
 import com.nginx.image.net.S3Client;
 import com.nginx.image.resources.MockDownload;
 import com.nginx.image.util.ImageSizeEnum;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
  //  PhotoResizerTest.java
  //  PhotoResizer
  //
- //  Copyright © 2017 NGINX Inc. All rights reserved.
+ //  Copyright © 2018 NGINX Inc. All rights reserved.
  */
 
 public class PhotoResizerTest  {
@@ -77,7 +77,7 @@ public class PhotoResizerTest  {
 
         when(mockS3.fileUpload(any(), anyString())).thenReturn(Boolean.TRUE);
 
-        PhotoResizer resizer = new PhotoResizer(mockS3);
+        PhotoResizer resizer = new PhotoResizer(mockS3, RULE.getConfiguration());
         String resizeJSONString = resizer.resizeImage(MOCK_PATH);
 
         assertTrue(StringUtils.isNotBlank(resizeJSONString));

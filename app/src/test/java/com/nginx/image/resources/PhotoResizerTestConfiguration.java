@@ -1,6 +1,6 @@
 package com.nginx.image.resources;
 
-import com.nginx.image.PhotoResizerConfiguration;
+import com.nginx.image.configs.PhotoResizerConfiguration;
 
 /**
  * Created 12/1/17 12:56 with IntelliJ IDEA.

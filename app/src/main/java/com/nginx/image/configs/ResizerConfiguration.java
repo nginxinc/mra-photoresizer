@@ -1,24 +1,26 @@
-package com.nginx.image;
+package com.nginx.image.configs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nginx.image.net.S3ClientFactory;
+import com.nginx.image.util.ImageSizeEnum;
 import io.dropwizard.Configuration;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
 import org.hibernate.validator.constraints.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.util.HashMap;
 
 /**
- *  PhotoResizerConfiguration.java
+ *  ResizerConfiguration.java
  *  PhotoResizer
  *
- *  Copyright © 2017 NGINX Inc. All rights reserved.
+ *  Copyright © 2018 NGINX Inc. All rights reserved.
  *
  *  This class extends {@link io.dropwizard.Configuration}
  */
 
-public class PhotoResizerConfiguration extends Configuration {
+public class ResizerConfiguration extends Configuration {
     private static final EnvironmentVariableLookup echoEnv =
             new EnvironmentVariableLookup();
 
@@ -33,7 +35,6 @@ public class PhotoResizerConfiguration extends Configuration {
      */
     @NotEmpty
     private final static Float COMPRESSION_QUALITY = 0.8F;
-
 
     /**
      * S3Client
@@ -54,6 +55,7 @@ public class PhotoResizerConfiguration extends Configuration {
 
     /**
      * Setter for s3Client
+     * @param s3Client the s3clientFactory to get the s3Client for accessing and storing images
      */
     @JsonProperty
     public void setS3Client(S3ClientFactory s3Client) {

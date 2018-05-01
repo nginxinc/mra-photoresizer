@@ -24,7 +24,7 @@ import java.util.List;
  * The ExifManager class uses the sanselan library to manage the exchangeable
  * image file information when resizing images
  *
- * Copyright © 2017 NGINX Inc. All rights reserved.
+ * Copyright © 2018 NGINX Inc. All rights reserved.
  */
 class ExifManager {
 
