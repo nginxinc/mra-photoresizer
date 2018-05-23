@@ -1,12 +1,22 @@
 #!/bin/sh
 NGINX_PID="/var/run/nginx.pid"    # /   (root directory)
+NGINX_CONF=""
+
 APP="java -jar target/PhotoResizer-1.0.1-SNAPSHOT.jar server PhotoResizer.yaml"
 
-NGINX_CONF="/etc/nginx/nginx.conf";
+case "$NETWORK" in
+    fabric)
+        NGINX_CONF="/etc/nginx/fabric_nginx_$CONTAINER_ENGINE.conf"
+        echo 'Fabric configuration set'
+        nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;" &
+        ;;
+    router-mesh)
+        ;;
+    *)
+        echo 'Network not supported'
+esac
 
 $APP &
-
-nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;"
 
 sleep 30
 APP_PID=`ps aux | grep "$APP" | grep -v grep`
