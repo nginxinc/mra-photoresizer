@@ -42,7 +42,7 @@ http {
   resolver {{ resolver.host }} valid={{ resolver.ttl }};  #use local DNS and override TTL to whatever value makes sense
   resolver_timeout 2s;
   client_max_body_size 30M;
-  
+
   # Moderated delivery: the rate should be based on the server capacity. This value works for a quad-core development system
   limit_req_zone $server_addr zone=moderateReqs:1m rate=4r/s;
 
