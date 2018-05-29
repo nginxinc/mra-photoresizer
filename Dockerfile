@@ -1,5 +1,7 @@
 FROM openjdk:8-jdk
 
+RUN useradd --create-home -s /bin/bash resizer
+
 ARG CONTAINER_ENGINE_ARG
 ARG USE_NGINX_PLUS_ARG
 ARG USE_VAULT_ARG
@@ -55,6 +57,7 @@ RUN mvn clean install && \
     target/generated-sources target/generated-test-sources target/javadoc-bundle-options \
     target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 
+RUN chmod 777 /tmp/application.log
 EXPOSE 80 8000 12005
 
 CMD ["./start.sh"]
