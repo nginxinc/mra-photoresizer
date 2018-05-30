@@ -6,7 +6,7 @@ NGINX_CONF="/etc/nginx/nginx.conf";
 
 nginx -c "$NGINX_CONF" -g "pid $NGINX_PID;" &
 
-su resizer -c 'java -jar target/PhotoResizer-1.0.1-SNAPSHOT.jar server PhotoResizer.yaml' &
+su resizer -c "${APP}" &
 
 sleep 30
 APP_PID=`ps aux | grep "$APP" | grep -v grep`
