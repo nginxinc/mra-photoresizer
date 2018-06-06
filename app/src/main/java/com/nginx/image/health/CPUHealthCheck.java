@@ -1,12 +1,11 @@
 package com.nginx.image.health;
 
 import com.codahale.metrics.health.HealthCheck;
-
-import java.text.MessageFormat;
-import java.text.NumberFormat;
-import java.lang.management.ManagementFactory;
 import com.sun.management.OperatingSystemMXBean;
 import org.slf4j.LoggerFactory;
+
+import java.lang.management.ManagementFactory;
+import java.text.MessageFormat;
 
 /**
  * CPUHealthCheck.java
