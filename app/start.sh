@@ -2,7 +2,8 @@
 NGINX_PID="/var/run/nginx.pid"    # /   (root directory)
 APP="java -jar target/PhotoResizer-1.0.1-SNAPSHOT.jar server PhotoResizer.yaml"
 
-su resizer -c "${APP}" &
+
+su resizer --command "$APP" &
 
 sleep 30
 APP_PID=`ps aux | grep "$APP" | grep -v grep`
