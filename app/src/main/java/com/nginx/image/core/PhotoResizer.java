@@ -11,7 +11,6 @@ import com.nginx.image.util.ResizerException;
 import org.apache.sanselan.ImageReadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -44,7 +43,7 @@ public class PhotoResizer {
 
 
     /**
-     * Default constructor
+     * Constructor
      *
      * Initializes the {@link AmazonS3Client} using {@link AWSCredentials} generated from the
      * environment variables set in the {@link PhotoResizerConfiguration}

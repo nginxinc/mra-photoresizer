@@ -60,6 +60,7 @@ public class PhotoIO
      * @param fileHandle the name of the {@link File}
      * @param resizedImage the resized {@link BufferedImage} to write
      * @param compressionQuality the compression quality to use when saving the image
+     * @throws ResizerException to handle the issues
      */
     public void writeJpg(File fileHandle, BufferedImage resizedImage, float compressionQuality) throws ResizerException
     {
@@ -110,7 +111,8 @@ public class PhotoIO
      *
      * @param imageURL the name of the {@link String}
      *
-     * @return a {@link ConcurrentHashMap<ImageSizeEnum,File>} is returned with 3 image files created corresponding to the ImageSizeEnum
+     * @return a {@link ConcurrentHashMap} is returned with 3 image files created corresponding to the ImageSizeEnum
+     * @throws ResizerException to deal with possible errors
      */
     public ConcurrentHashMap<ImageSizeEnum,File> getImage(String imageURL) throws ResizerException
     {
@@ -192,7 +194,7 @@ public class PhotoIO
      * This method uploads the image to S3
      *
      * @param imageFile the image that is being uploaded from a {@link File} to S3
-     *
+     * @param imagePath is a {@link String} with the image path for uploading
      */
     public void uploadImage(File imageFile, String imagePath)
     {
