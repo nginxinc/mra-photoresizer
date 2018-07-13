@@ -1,0 +1,57 @@
+{
+  "id": "/resizer",
+  "instances": 1,
+  "cpus": 1,
+  "mem": 4096,
+  "disk": 0,
+  "gpus": 0,
+  "fetch": [
+    {
+      "uri": "<IMAGE_REPOSITORY_CREDENTIALS>",
+      "extract": true,
+      "executable": false,
+      "cache": false
+    }
+  ],
+  "backoffSeconds": 1,
+  "backoffFactor": 1.15,
+  "maxLaunchDelaySeconds": 3600,
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "<IMAGE_REPO_AND_TAG>",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+          "containerPort": 443,
+          "hostPort": 0,
+          "servicePort": 10005,
+          "protocol": "tcp",
+          "name": "default"
+        }
+      ],
+      "privileged": false,
+      "forcePullImage": true
+    }
+  },
+  "upgradeStrategy": {
+    "minimumHealthCapacity": 1,
+    "maximumOverCapacity": 1
+  },
+  "unreachableStrategy": {
+    "inactiveAfterSeconds": 300,
+    "expungeAfterSeconds": 600
+  },
+  "killSelection": "YOUNGEST_FIRST",
+  "requirePorts": true,
+  "env": {
+    "AWS_ACCESS_KEY_ID": "<AWS_ACCESS_LEY>",
+    "AWS_REGION": "us-west-1",
+    "AWS_SECRET_ACCESS_KEY": "<AWS_ACCESS_SECRET>",
+    "NETWORK": "fabric",
+    "REDIS_CACHE_URL": "redis.mesos.marathon",
+    "REDIS_CACHE_PORT": "6379",
+    "S3_BUCKET": "<S3_BUCKET>",
+    "S3_URL": "<S3_URL>"
+  }
+}
