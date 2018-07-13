@@ -17,7 +17,7 @@ import java.text.NumberFormat;
  * to check the amount of disk space available to the resizer service
  *
  *
- * Copyright © 2017 NGINX Inc. All rights reserved.
+ * Copyright © 2018 NGINX Inc. All rights reserved.
  */
 public class DiskHealthCheck extends HealthCheck {
 

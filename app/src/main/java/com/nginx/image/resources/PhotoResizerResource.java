@@ -11,7 +11,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 /**
- * PhotoResizerResource class: Copyright © 2017 NGINX Inc. All rights reserved.
+ * PhotoResizerResource class: Copyright © 2018 NGINX Inc. All rights reserved.
  *
  * Defines the GET and POST methods which act as endpoints for the photo resizing
  * functionality

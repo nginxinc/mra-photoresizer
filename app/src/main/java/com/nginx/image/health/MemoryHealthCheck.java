@@ -14,7 +14,7 @@ import java.text.NumberFormat;
  * Extension of the {@link com.codahale.metrics.health.HealthCheck} abstract class
  * ensures that there is enough memory to run the resizer service
  *
- * Copyright © 2017 NGINX Inc. All rights reserved.
+ * Copyright © 2018 NGINX Inc. All rights reserved.
  */
 public class MemoryHealthCheck extends HealthCheck {
 

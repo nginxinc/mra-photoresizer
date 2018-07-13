@@ -19,7 +19,7 @@ import io.dropwizard.setup.Environment;
  *
  * Extends {@link io.dropwizard.Application} to dynamically build configuration
  *
- *  Copyright © 2017 NGINX Inc. All rights reserved.
+ *  Copyright © 2018 NGINX Inc. All rights reserved.
  */
 public class PhotoResizerApplication extends Application<PhotoResizerConfiguration> {
 

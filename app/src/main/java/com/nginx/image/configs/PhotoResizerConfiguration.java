@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
  *  ResizerConfiguration.java
  *  PhotoResizer
  *
- *  Copyright © 2017 NGINX Inc. All rights reserved.
+ *  Copyright © 2018 NGINX Inc. All rights reserved.
  *
  *  This class extends {@link Configuration}
  */

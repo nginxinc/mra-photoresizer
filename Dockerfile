@@ -1,8 +1,11 @@
 FROM openjdk:8-jdk
 
+RUN useradd --create-home -s /bin/bash resizer
+
 ARG CONTAINER_ENGINE_ARG
 ARG USE_NGINX_PLUS_ARG
 ARG USE_VAULT_ARG
+ARG NETWORK_ARG
 
 # CONTAINER_ENGINE specifies the container engine to which the
 # containers will be deployed. Valid values are:
@@ -11,7 +14,8 @@ ARG USE_VAULT_ARG
 # - local
 ENV USE_NGINX_PLUS=${USE_NGINX_PLUS_ARG:-true} \
     USE_VAULT=${USE_VAULT_ARG:-false} \
-    CONTAINER_ENGINE=${CONTAINER_ENGINE_ARG:-kubernetes}
+    CONTAINER_ENGINE=${CONTAINER_ENGINE_ARG:-kubernetes} \
+	NETWORK=${NETWORK_ARG:-fabric}
 
 COPY nginx/ssl /etc/ssl/nginx/
 
@@ -53,6 +57,7 @@ RUN mvn clean install && \
     target/generated-sources target/generated-test-sources target/javadoc-bundle-options \
     target/maven-archiver target/maven-status target/surefire-reports target/test-classes
 
+RUN chmod 777 /tmp/application.log
 EXPOSE 80 8000 12005
 
 CMD ["./start.sh"]
