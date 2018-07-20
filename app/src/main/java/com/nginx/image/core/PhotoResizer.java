@@ -11,7 +11,6 @@ import com.nginx.image.util.ResizerException;
 import org.apache.sanselan.ImageReadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -39,12 +38,12 @@ public class PhotoResizer {
     private final String classInstance = " class instance = " + System.identityHashCode(this);
 
     // The compression quality to use when resizing images
-    private final PhotoResizerConfiguration config;
-    private final PhotoIO pio;
+    private final PhotoResizerConfiguration CONFIG;
+    private final PhotoIO PIO;
 
 
     /**
-     * Default constructor
+     * Constructor
      *
      * Initializes the {@link AmazonS3Client} using {@link AWSCredentials} generated from the
      * environment variables set in the {@link PhotoResizerConfiguration}
@@ -54,8 +53,8 @@ public class PhotoResizer {
      */
     public PhotoResizer(S3Client s3Client, PhotoResizerConfiguration configuration)
     {
-        this.config = configuration;
-        this.pio = new PhotoIO(s3Client);
+        this.CONFIG = configuration;
+        this.PIO = new PhotoIO(s3Client);
     }
 
     /**
@@ -88,7 +87,7 @@ public class PhotoResizer {
             final String baseImagePath = jpgURL.getPath().replaceAll("original.*$", "");
 
             // read the downloaded image in to a BufferedImage and get the dimensions
-            imageFilesMap = pio.getImage(imageURL);
+            imageFilesMap = PIO.getImage(imageURL);
             File originalImageFile = imageFilesMap.get(ImageSizeEnum.LARGE);
             BufferedImage originalBuffImage = ImageIO.read(originalImageFile);
             LOGGER.info("Generated originalBuffImage: " + originalBuffImage);
@@ -102,22 +101,23 @@ public class PhotoResizer {
                 BufferedImage transformedOrigBuffImage  = new PhotoTransformer().transformImage(width, height, originalImageFile, originalBuffImage);
 
                 // Execute these in parallel using lambda expressions and ConcurrentHashMap parallelism
-                imageFilesMap.forEach(1, (size, imageFile) -> {
+                // Takes the size Enum value from the key and the file from the value
+                imageFilesMap.forEach(1, (enumSize , imageFile) -> {
                     try{
-                        ImageInformation imageData = resize(imageFile, config.getImageSizeConfiguration().getImageSize(size), transformedOrigBuffImage);
-                        String keyName = baseImagePath + size.getSizeName() + extension;
+                        ImageInformation imageData = resize(imageFile, CONFIG.getImageSizeConfiguration().getImageSize(enumSize), transformedOrigBuffImage);
+                        String keyName = baseImagePath + enumSize.getSizeName() + extension;
                         LOGGER.info("Mid App: keyname " + keyName + classInstance);
 
-                        pio.uploadImage(imageFile, keyName);
+                        PIO.uploadImage(imageFile, keyName);
                         String uploadedURL = jpgURL.getProtocol() + "://" + jpgURL.getHost() + extractPort(jpgURL) + keyName;
-                        imagesURLMap.put(size.getSizeName() + "_url",uploadedURL);
-                        imagesURLMap.put(size.getSizeName() + "_height", String.valueOf(imageData.height));
-                        imagesURLMap.put(size.getSizeName() + "_width", String.valueOf(imageData.width));
+                        imagesURLMap.put(enumSize.getSizeName() + "_url",uploadedURL);
+                        imagesURLMap.put(enumSize.getSizeName() + "_height", String.valueOf(imageData.height));
+                        imagesURLMap.put(enumSize.getSizeName() + "_width", String.valueOf(imageData.width));
                     }
                     catch (Exception e)
                     {
                         LOGGER.error("Caught exception during resize for file " + imageFile +
-                                " with maxSize " + config.getImageSizeConfiguration().getImageSize(size), e);
+                                " with maxSize " + CONFIG.getImageSizeConfiguration().getImageSize(enumSize), e);
                     }
                 });
             }
@@ -227,7 +227,7 @@ public class PhotoResizer {
                 tmp.flush();
             }
             ImageInformation imageData = new ImageInformation(1, originalBuffImage.getWidth(), originalBuffImage.getHeight());
-            this.pio.writeJpg(resizedImageFile, originalBuffImage, this.config.getResizerConfiguration().getCompressionQuality());
+            this.PIO.writeJpg(resizedImageFile, originalBuffImage, this.CONFIG.getResizerConfiguration().getCompressionQuality());
             return imageData;
 
         } catch (Exception e) {

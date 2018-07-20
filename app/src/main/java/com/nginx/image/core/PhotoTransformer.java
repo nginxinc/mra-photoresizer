@@ -50,6 +50,9 @@ public class PhotoTransformer {
      * @param height the height to use in the transformation
      * @param imageFile the image to transform {@link File}
      * @param bufferedImage the buffered image {@link BufferedImage}
+     * @return {@link BufferedImage} of the transformed image
+     * @throws IOException when struggling to reading
+     * @throws ImageReadException when unable to read file
      */
     public BufferedImage transformImage(int width, int height, File imageFile, BufferedImage bufferedImage) throws IOException, ImageReadException
     {

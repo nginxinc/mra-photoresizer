@@ -124,12 +124,18 @@ http {
       {% endfor %}
     {% endif %}
 
-    location = /status.html {
-      root /usr/share/nginx/html/;
+    location /api {
+        api [write=on];
+        # directives limiting access to the API
     }
 
-    location /status {
-      status;
+    location = /dashboard.html {
+        root   /usr/share/nginx/html;
+    }
+
+    # Redirect requests made to the old dashboard
+    location = /status.html {
+        return 301 /dashboard.html;
     }
   }
 }

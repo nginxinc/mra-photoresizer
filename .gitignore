@@ -37,3 +37,4 @@ nginx-repo.crt
 *.pem
 *.log
 
+lib

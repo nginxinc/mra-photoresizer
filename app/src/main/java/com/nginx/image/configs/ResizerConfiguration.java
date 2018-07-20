@@ -2,14 +2,12 @@ package com.nginx.image.configs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nginx.image.net.S3ClientFactory;
-import com.nginx.image.util.ImageSizeEnum;
 import io.dropwizard.Configuration;
 import io.dropwizard.configuration.EnvironmentVariableLookup;
-import org.hibernate.validator.constraints.*;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
 
 /**
  *  ResizerConfiguration.java
