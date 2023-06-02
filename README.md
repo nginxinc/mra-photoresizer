@@ -1,3 +1,7 @@
+[![Project Status: Abandoned – Initial development has started, but there has not yet been a stable, usable release; the project has been abandoned and the author(s) do not intend on continuing development.](https://www.repostatus.org/badges/latest/abandoned.svg)](https://www.repostatus.org/#abandoned)
+
+# This repository has been archived. There will likely be no further development on the project and security vulnerabilities may be unaddressed.
+
 # NGINX Microservices Reference Architecture: PhotoResizer Service
 
 This repository contains a Java application which is used to resize and upload images for the NGINX _Ingenious_ application. The 
